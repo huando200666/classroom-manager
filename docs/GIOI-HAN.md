@@ -26,6 +26,8 @@
 
 Bản 1.0.2 sửa thời hạn nhận kết quả quá ngắn khi đọc danh sách và bổ sung lỗi theo từng thao tác. Việc sửa timeout không thay thế kiểm chứng selector và cấu trúc trang Classroom thực tế.
 
+Bản 1.0.3 tạm hiển thị Classroom khi đọc danh sách lớp/bài tập/bài nộp. Người dùng đã xác nhận trên trang của họ rằng chuyển Classroom ra trước giúp đọc được lớp. Đây là bằng chứng cho điều kiện kích hoạt lỗi đang xử lý, không phải xác minh toàn bộ luồng tải trên dữ liệu thật.
+
 1. **Chưa có phiên Classroom thực tế để kiểm chứng DOM.** Các selector ngữ nghĩa đã được kiểm thử trên fixture, không phải bản sao DOM production của Google. Hệ thống có thể dừng với lỗi adapter khi Google dùng cấu trúc khác. Cần đối chiếu trên lớp được phép dùng trước khi triển khai cho giảng viên.
 2. Đọc vùng bài nộp yêu cầu data attribute xác định chủ sở hữu hoặc vùng ARIA gắn tên sinh viên. Những bố cục khác sẽ bị từ chối để tránh tải nhầm tệp. Hiện chưa hỗ trợ mọi trình xem bài/iframe/shortcut Google Docs.
 3. Cuộn động có ngân sách thời gian; nhóm thu gọn, filter, danh sách không có href sinh viên hoặc virtual list đặc thù có thể chưa được đọc đầy đủ. Có cảnh báo khi bộ đếm không khớp, không điền số liệu còn thiếu bằng giả định.

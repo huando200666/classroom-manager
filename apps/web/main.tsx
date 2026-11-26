@@ -659,7 +659,8 @@ function App() {
           {busy && (
             <div className="busy-bar" role="status">
               <RefreshCw size={16} className="spin" />
-              Đang xử lý… Trang Classroom có thể cần một lúc để tải đủ dữ liệu.
+              Đang xử lý… Trang Classroom có thể cần một lúc để tải đủ dữ liệu. Khi đọc danh sách,
+              tiện ích tạm chuyển sang Classroom rồi quay lại trang này.
             </div>
           )}
           {['Tổng quan', 'Lớp học', 'Bài tập', 'Tải bài nộp'].includes(page) && (

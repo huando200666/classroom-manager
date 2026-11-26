@@ -108,6 +108,30 @@ export class ChromiumAdapter implements BrowserAdapter {
     );
   }
   async dom<T = any>(tabId: number, command: string, args: object = {}): Promise<T> {
+    if (!['courses', 'assignments', 'students'].includes(command))
+      return this.requestDom<T>(tabId, command, args);
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab.url?.startsWith('https://classroom.google.com/'))
+      throw new Error('Tab không còn ở Google Classroom. Mở Classroom rồi kết nối lại.');
+    if (tab.active) return this.requestDom<T>(tabId, command, args);
+
+    const [previous] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
+    // Timer trong trang nền có thể bị Chrome trì hoãn. Đọc danh sách khi tab hiển thị.
+    await retry(() => chrome.tabs.update(tabId, { active: true }), { retryIf: tabLocked });
+    try {
+      return await this.requestDom<T>(tabId, command, args);
+    } finally {
+      try {
+        const [current] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
+        // Không giành lại tiêu điểm nếu người dùng đã chuyển sang một tab khác.
+        if (current?.id === tabId && previous?.id !== undefined && previous.id !== tabId)
+          await chrome.tabs.update(previous.id, { active: true });
+      } catch {
+        // Tab dashboard có thể đã đóng; vẫn giữ kết quả hoặc lỗi đọc ban đầu.
+      }
+    }
+  }
+  private async requestDom<T>(tabId: number, command: string, args: object): Promise<T> {
     const listNames: Record<string, string> = {
       courses: 'danh sách lớp',
       assignments: 'danh sách bài tập',

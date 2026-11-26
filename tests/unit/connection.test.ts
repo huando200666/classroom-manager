@@ -6,13 +6,76 @@ const lost = () => new Error('Could not establish connection. Receiving end does
 let send: ReturnType<typeof vi.fn>;
 let inject: ReturnType<typeof vi.fn>;
 let get: ReturnType<typeof vi.fn>;
+let query: ReturnType<typeof vi.fn>;
+let update: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   send = vi.fn();
   inject = vi.fn().mockResolvedValue([]);
-  get = vi.fn().mockResolvedValue({ id: 42, url: 'https://classroom.google.com/' });
+  get = vi
+    .fn()
+    .mockResolvedValue({ id: 42, url: 'https://classroom.google.com/', active: true, windowId: 1 });
+  query = vi.fn();
+  update = vi.fn().mockResolvedValue({});
   vi.stubGlobal('chrome', {
-    tabs: { sendMessage: send, get },
+    tabs: { sendMessage: send, get, query, update },
     scripting: { executeScript: inject },
+  });
+});
+
+describe('đọc Classroom khi tab nền bị làm chậm', () => {
+  function backgroundTab() {
+    get.mockResolvedValue({
+      id: 42,
+      url: 'https://classroom.google.com/',
+      active: false,
+      windowId: 1,
+    });
+    query.mockResolvedValueOnce([{ id: 7 }]).mockResolvedValueOnce([{ id: 42 }]);
+  }
+  it('hiển thị tab Classroom trước khi đọc, rồi trở lại dashboard', async () => {
+    backgroundTab();
+    send.mockImplementation(async () => {
+      expect(update).toHaveBeenCalledWith(42, { active: true });
+      return { ok: true, data: { courses: ['c'] } };
+    });
+    expect(await new ChromiumAdapter().dom(42, 'courses')).toEqual({ courses: ['c'] });
+    expect(query).toHaveBeenCalledWith({ active: true, windowId: 1 });
+    expect(update.mock.calls).toEqual([
+      [42, { active: true }],
+      [7, { active: true }],
+    ]);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+  it('không giành lại tiêu điểm nếu người dùng đã chọn một tab khác', async () => {
+    backgroundTab();
+    query
+      .mockReset()
+      .mockResolvedValueOnce([{ id: 7 }])
+      .mockResolvedValueOnce([{ id: 99 }]);
+    send.mockResolvedValue({ ok: true, data: [] });
+    await new ChromiumAdapter().dom(42, 'students');
+    expect(update.mock.calls).toEqual([[42, { active: true }]]);
+  });
+  it('giữ nguyên lỗi đọc và khôi phục dashboard sau lỗi', async () => {
+    backgroundTab();
+    send.mockResolvedValue({ ok: false, error: 'Không nhận diện được lớp học' });
+    await expect(new ChromiumAdapter().dom(42, 'assignments')).rejects.toThrow(
+      'Không nhận diện được lớp học',
+    );
+    expect(update).toHaveBeenLastCalledWith(7, { active: true });
+  });
+  it('dashboard đã đóng không làm mất kết quả đọc thành công', async () => {
+    backgroundTab();
+    update.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('No tab with id: 7'));
+    send.mockResolvedValue({ ok: true, data: ['c'] });
+    expect(await new ChromiumAdapter().dom(42, 'courses')).toEqual(['c']);
+  });
+  it('lệnh tải tệp không tự chuyển tab hoặc phát lại', async () => {
+    send.mockResolvedValue({ ok: true, data: { clicked: true } });
+    await new ChromiumAdapter().dom(42, 'driveDownload');
+    expect(update).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
+    expect(send).toHaveBeenCalledTimes(1);
   });
 });
 afterEach(() => {

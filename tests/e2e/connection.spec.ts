@@ -23,7 +23,7 @@ function browserPath() {
   return defaultPath;
 }
 
-test('kết nối tab thiếu content script, không reload trang và không nhân đôi nút tải', async ({}, info) => {
+test('kết nối tab nền thiếu content script, khôi phục dashboard và không nhân đôi nút tải', async ({}, info) => {
   const extension = info.outputPath('extension');
   await cp(resolve('dist/extension'), extension, { recursive: true });
   const manifest = JSON.parse(await readFile(join(extension, 'manifest.json'), 'utf8'));
@@ -69,9 +69,36 @@ test('kết nối tab thiếu content script, không reload trang và không nh�
     expect(initialError).toContain('Receiving end does not exist');
     const app = await context.newPage();
     await app.goto(`chrome-extension://${extensionId}/index.html`);
+    const appId = await app.evaluate(async () => (await chrome.tabs.getCurrent())!.id!);
+    await worker.evaluate(
+      async ({ classroomId, appId }) => {
+        const classroomTab = await chrome.tabs.get(classroomId);
+        const appTab = await chrome.tabs.get(appId);
+        if (appTab.windowId !== classroomTab.windowId)
+          await chrome.tabs.move(appId, { windowId: classroomTab.windowId, index: -1 });
+        await chrome.tabs.update(appId, { active: true });
+        const send = chrome.tabs.sendMessage.bind(chrome.tabs);
+        // Headless Chromium có thể giữ mọi document ở trạng thái visible.
+        // Kiểm tra tab thực bằng Chrome API ngay trước lệnh đọc, không giả dữ liệu lớp.
+        Object.defineProperty(chrome.tabs, 'sendMessage', {
+          value: async (id: number, message: { command?: string }) => {
+            if (message.command === 'courses' && !(await chrome.tabs.get(id)).active)
+              throw new Error('Kiểm thử: lệnh đọc lớp chạy trong tab nền');
+            return send(id, message);
+          },
+        });
+      },
+      { classroomId: tabId, appId },
+    );
+    expect(await worker.evaluate(async (id) => (await chrome.tabs.get(id)).active, tabId)).toBe(
+      false,
+    );
     await app.getByRole('button', { name: 'Làm mới tab' }).click();
     await app.getByRole('button', { name: 'Kết nối', exact: true }).click();
     await expect(app.getByText(/teacher@example.test · 1 lớp/)).toBeVisible();
+    expect(await worker.evaluate(async (id) => (await chrome.tabs.get(id)).active, appId)).toBe(
+      true,
+    );
     expect(await classroom.evaluate(() => document.body.dataset.preserved)).toBe('yes');
     await expect(app.getByRole('alert')).toHaveCount(0);
 

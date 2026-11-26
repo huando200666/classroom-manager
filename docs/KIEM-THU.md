@@ -11,8 +11,8 @@ Kiểm thử unit/integration bằng Vitest + jsdom; E2E giao diện và tiện 
 | Kiểm tra                                     | Kết quả                                                                        |
 | -------------------------------------------- | ------------------------------------------------------------------------------ |
 | TypeScript strict và build production        | Đạt, tạo `dist/extension`                                                      |
-| Vitest unit/integration                      | **86/86 đạt**, 6 tệp kiểm thử, 4,36 giây cho bản 1.0.2                         |
-| Playwright E2E                               | **5/5 đạt**, tổng 2,4 phút trên bản build 1.0.2                                |
+| Vitest unit/integration                      | **91/91 đạt**, 6 tệp kiểm thử, 5,85 giây cho bản 1.0.3                         |
+| Playwright E2E                               | **5/5 đạt**, tổng 2,3 phút trên bản build 1.0.3                                |
 | Giao diện desktop và 390px                   | Đạt, không lỗi JavaScript hoặc tràn ngang toàn trang                           |
 | Quét 73 sinh viên                            | Đúng 55 submitted và 18 missing                                                |
 | Tải nhiều ZIP từ 55 bài đủ điều kiện         | **54 ZIP hoàn tất**, không tải tệp teacher hoặc bài missing                    |
@@ -43,6 +43,8 @@ Các lỗi phát hiện và sửa trong quá trình kiểm thử: liên kết đ
 11. Chỉnh tên thư mục và thêm định dạng PDF, phát cập nhật trạng thái nền, xác nhận bản nháp được giữ và lưu được. Ca này chạy giao diện thật với cầu nối Chrome được mô phỏng.
 
 ## Lỗi phát hiện trong lần rà soát 26/11
+
+- **Đọc danh sách khi Classroom nằm nền (sửa ở 1.0.3):** người dùng xác nhận việc chuyển sang tab Classroom ngay sau Kết nối giúp đọc được lớp. Adapter tạm kích hoạt Classroom cho ba lệnh đọc danh sách và khôi phục tab trước đó khi không có lựa chọn mới từ người dùng. Bổ sung 5 unit tests về thứ tự kích hoạt/đọc/khôi phục, giữ lựa chọn mới, xử lý lỗi và không phát lại lệnh tải. Ca E2E kết nối bắt đầu từ tab Classroom không hoạt động, kiểm tra Chrome API xác nhận tab được kích hoạt trước `courses` và dashboard được khôi phục. Dữ liệu trả về vẫn do content script đọc từ fixture. Headless Chromium có thể coi nhiều document cùng visible, nên kiểm tra trạng thái tab qua Chrome API thay vì giả định Page Visibility phản ánh tab thật trong môi trường headless.
 
 - **Timeout nhận kết quả ngắn hơn thao tác đọc (sửa ở 1.0.2):** chờ trang tối đa 18 giây rồi thu thập danh sách tối đa 20 giây có thể vượt thời hạn nhận phản hồi 26 giây. Ba ca hồi quy `courses/assignments/students` với phản hồi ở giây 32 đều thất bại ở mã cũ và đạt sau sửa. Dùng chung mốc thời gian giữa content script và browser adapter; thời hạn đọc danh sách là 45 giây, có tên thao tác trong thông báo. Kiểm tra thêm lệnh đọc bị treo vẫn kết thúc và lệnh tải không bị phát lại khi timeout. Đây là lỗi tái hiện được trong mã, chưa đủ xác nhận là nguyên nhân duy nhất trên mọi trang Classroom thật.
 

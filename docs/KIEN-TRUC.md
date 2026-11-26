@@ -22,6 +22,7 @@ Dashboard là extension page, không dùng trang web bên ngoài để kết n�
 ## Ranh giới và mô-đun
 
 - `BrowserAdapter` cung cấp liệt kê tab, mở Classroom, điều hướng, tab làm việc và thông điệp DOM. `ChromiumAdapter` dùng API chính thức. Firefox cần implementation riêng và kiểm thử tương thích.
+- Từ 1.0.3, các lệnh `courses`, `assignments`, `students` tạm kích hoạt tab Classroom trước khi đọc. Kết quả hoặc lỗi được giữ nguyên; tab trước đó được khôi phục nếu người dùng chưa tự chuyển sang tab khác. Không đổi tab cho lệnh tải Drive. Cách này xử lý trường hợp người dùng xác nhận đọc được khi hiển thị Classroom nhưng bị timeout khi để ở nền. Chrome có thể trì hoãn timer của tab nền: [tài liệu Chrome](https://developer.chrome.com/blog/timer-throttling-in-chrome-88).
 - Content script chạy trong isolated world, đọc DOM công khai, ARIA, title, href, text và data attributes có trên trang. Không đọc dữ liệu bootstrap nội bộ, storage Google, cookie hay token.
 - Parser dùng các nhóm trạng thái Việt/Anh, ưu tiên phủ định để không đọc “Not submitted” thành “Submitted”. Trạng thái mâu thuẫn là unknown.
 - Bộ thu thập động dùng MutationObserver để đợi dữ liệu và quét các vùng cuộn có thể nhận diện. Có giới hạn tổng thời gian, đối chiếu bộ đếm và không khẳng định đã quét đủ nếu thiếu.
