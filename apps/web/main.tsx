@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { version as appVersion } from '../../package.json';
 import { createRoot } from 'react-dom/client';
 import {
   LayoutDashboard,
@@ -628,7 +629,9 @@ function App() {
                   “Tải tiện ích đã giải nén”, sau đó bấm biểu tượng tiện ích. Kết nối trực tiếp từ
                   website sẽ được bổ sung ở phiên bản sau.
                 </p>
-                <a href="https://github.com/huando200666/classroom-manager/releases/latest/download/Classroom-Manager-1.0.1.zip">
+                <a
+                  href={`https://github.com/huando200666/classroom-manager/releases/download/v${appVersion}/Classroom-Manager-${appVersion}.zip`}
+                >
                   Tải tiện ích Chrome/Edge
                 </a>
                 {' · '}
@@ -1214,9 +1217,9 @@ function App() {
                 <li>
                   <h3>Cài tiện ích</h3>
                   <p>
-                    Giải nén Classroom-Manager-1.0.1.zip. Vào <code>chrome://extensions</code> hoặc{' '}
-                    <code>edge://extensions</code>, bật Chế độ nhà phát triển, chọn Tải tiện ích đã
-                    giải nén và chọn thư mục Classroom-Manager.
+                    Giải nén Classroom-Manager-{appVersion}.zip. Vào{' '}
+                    <code>chrome://extensions</code> hoặc <code>edge://extensions</code>, bật Chế độ
+                    nhà phát triển, chọn Tải tiện ích đã giải nén và chọn thư mục Classroom-Manager.
                   </p>
                 </li>
                 <li>
@@ -1265,7 +1268,7 @@ function App() {
           )}
           <footer className="page-footer">
             <span>
-              Classroom Manager <span className="version">v1.0.1</span>
+              Classroom Manager <span className="version">v{appVersion}</span>
             </span>
             <span>
               <ShieldCheck size={14} />

@@ -1,5 +1,6 @@
 import { retry, tabLocked, timeout, delay } from './retry';
 import { missingReceiver, connectionError } from '../shared/connection-errors';
+import { CLASSROOM_RESPONSE_MS, DOM_RESPONSE_MS } from '../shared/timeouts';
 export interface BrowserAdapter {
   listClassroomTabs(): Promise<{ id: number; title: string; url: string }[]>;
   openClassroom(): Promise<number>;
@@ -107,8 +108,24 @@ export class ChromiumAdapter implements BrowserAdapter {
     );
   }
   async dom<T = any>(tabId: number, command: string, args: object = {}): Promise<T> {
+    const listNames: Record<string, string> = {
+      courses: 'danh sách lớp',
+      assignments: 'danh sách bài tập',
+      students: 'danh sách bài nộp',
+    };
+    const list = listNames[command];
+    const deadline = list ? CLASSROOM_RESPONSE_MS : DOM_RESPONSE_MS;
+    const timeoutMessage = list
+      ? `Đọc ${list} quá ${deadline / 1000} giây. Mở tab Classroom, chờ trang tải xong rồi thử lại. Nếu vẫn lỗi, giao diện Classroom có thể chưa được nhận diện.`
+      : command === 'driveDownload'
+        ? 'Chờ Drive phản hồi quá thời gian. Kiểm tra Downloads trước khi thử lại để tránh tải trùng.'
+        : 'Trang Classroom/Drive chưa phản hồi kịp. Mở tab đó, chờ trang tải xong rồi thử lại.';
     const send = () =>
-      timeout(chrome.tabs.sendMessage(tabId, { channel: 'cm-dom', command, ...args }), 26000);
+      timeout(
+        chrome.tabs.sendMessage(tabId, { channel: 'cm-dom', command, ...args }),
+        deadline,
+        timeoutMessage,
+      );
     let response;
     try {
       response = await send();

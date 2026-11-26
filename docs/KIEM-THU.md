@@ -11,8 +11,8 @@ Kiểm thử unit/integration bằng Vitest + jsdom; E2E giao diện và tiện 
 | Kiểm tra                                     | Kết quả                                                                        |
 | -------------------------------------------- | ------------------------------------------------------------------------------ |
 | TypeScript strict và build production        | Đạt, tạo `dist/extension`                                                      |
-| Vitest unit/integration                      | **81/81 đạt**, 6 tệp kiểm thử, 26,71 giây trong lần rà soát 26/11              |
-| Playwright E2E                               | **5/5 đạt**, tổng 2,2 phút trên bản build sau sửa lỗi                          |
+| Vitest unit/integration                      | **86/86 đạt**, 6 tệp kiểm thử, 4,36 giây cho bản 1.0.2                         |
+| Playwright E2E                               | **5/5 đạt**, tổng 2,4 phút trên bản build 1.0.2                                |
 | Giao diện desktop và 390px                   | Đạt, không lỗi JavaScript hoặc tràn ngang toàn trang                           |
 | Quét 73 sinh viên                            | Đúng 55 submitted và 18 missing                                                |
 | Tải nhiều ZIP từ 55 bài đủ điều kiện         | **54 ZIP hoàn tất**, không tải tệp teacher hoặc bài missing                    |
@@ -43,6 +43,8 @@ Các lỗi phát hiện và sửa trong quá trình kiểm thử: liên kết đ
 11. Chỉnh tên thư mục và thêm định dạng PDF, phát cập nhật trạng thái nền, xác nhận bản nháp được giữ và lưu được. Ca này chạy giao diện thật với cầu nối Chrome được mô phỏng.
 
 ## Lỗi phát hiện trong lần rà soát 26/11
+
+- **Timeout nhận kết quả ngắn hơn thao tác đọc (sửa ở 1.0.2):** chờ trang tối đa 18 giây rồi thu thập danh sách tối đa 20 giây có thể vượt thời hạn nhận phản hồi 26 giây. Ba ca hồi quy `courses/assignments/students` với phản hồi ở giây 32 đều thất bại ở mã cũ và đạt sau sửa. Dùng chung mốc thời gian giữa content script và browser adapter; thời hạn đọc danh sách là 45 giây, có tên thao tác trong thông báo. Kiểm tra thêm lệnh đọc bị treo vẫn kết thúc và lệnh tải không bị phát lại khi timeout. Đây là lỗi tái hiện được trong mã, chưa đủ xác nhận là nguyên nhân duy nhất trên mọi trang Classroom thật.
 
 - **Mất bản nháp cài đặt:** mỗi lần nhận lại state từ Chrome Storage, React nhận một object settings mới và ghi đè các trường đang sửa dù nội dung settings không thay đổi. Đã tái hiện bằng E2E thất bại (thư mục `Bai_nop_2026` bị đổi về `Classroom_Downloads`); sửa bằng cách chỉ đồng bộ khi nội dung settings đã lưu thay đổi. Ca hồi quy đã đạt sau sửa.
 - **Gói phát hành cũ:** README và package là 1.0.1 nhưng thư mục release chỉ có ZIP 1.0.0. Lệnh package trước đây không build lại nên có thể đóng gói mã cũ. Đã thêm build vào lệnh package, kiểm tra phiên bản manifest và tự tạo SHA256SUMS cho các ZIP phát hành.

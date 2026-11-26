@@ -15,7 +15,53 @@ beforeEach(() => {
     scripting: { executeScript: inject },
   });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+describe('thời hạn đọc Classroom', () => {
+  it.each(['courses', 'assignments', 'students'])(
+    '%s nhận kết quả chậm sau khi trang tải và thu thập danh sách',
+    async (command) => {
+      vi.useFakeTimers();
+      send.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve({ ok: true, data: { complete: true } }), 32000);
+          }),
+      );
+      const result = new ChromiumAdapter().dom(42, command).then(
+        (data) => ({ data }),
+        (error) => ({ error }),
+      );
+      await vi.advanceTimersByTimeAsync(32000);
+      expect(await result).toEqual({ data: { complete: true } });
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(inject).not.toHaveBeenCalled();
+    },
+  );
+  it('lệnh đọc bị treo vẫn có giới hạn và báo rõ bước cần kiểm tra', async () => {
+    vi.useFakeTimers();
+    send.mockImplementation(() => new Promise(() => {}));
+    const result = new ChromiumAdapter().dom(42, 'courses').catch((error) => error);
+    await vi.advanceTimersByTimeAsync(45000);
+    expect(await result).toBeInstanceOf(Error);
+    expect((await result).message).toContain('Đọc danh sách lớp quá 45 giây');
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(inject).not.toHaveBeenCalled();
+  });
+  it('lệnh tải quá thời gian không tự bấm lại và hướng dẫn kiểm tra Downloads', async () => {
+    vi.useFakeTimers();
+    send.mockImplementation(() => new Promise(() => {}));
+    const result = new ChromiumAdapter().dom(42, 'driveDownload').catch((error) => error);
+    await vi.advanceTimersByTimeAsync(26000);
+    expect(await result).toBeInstanceOf(Error);
+    expect((await result).message).toContain('Kiểm tra Downloads');
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(inject).not.toHaveBeenCalled();
+  });
+});
 
 describe('phục hồi content script chưa có trong tab', () => {
   it('giữ kết nối đang hoạt động, không nạp script thừa', async () => {

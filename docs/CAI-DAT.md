@@ -2,7 +2,7 @@
 
 ## Cài lần đầu
 
-1. Tải và giải nén `Classroom-Manager-1.0.1.zip` vào vị trí cố định, ví dụ `D:\Classroom-Manager`. Không xóa hay chuyển thư mục sau khi cài.
+1. Tải và giải nén `Classroom-Manager-1.0.2.zip` vào vị trí cố định, ví dụ `D:\Classroom-Manager`. Không xóa hay chuyển thư mục sau khi cài.
 2. Chrome: nhập `chrome://extensions`. Edge: nhập `edge://extensions`.
 3. Bật **Developer mode / Chế độ nhà phát triển**.
 4. Chọn **Load unpacked / Tải tiện ích đã giải nén**.
@@ -12,6 +12,8 @@
 Yêu cầu trình duyệt Chromium 120 trở lên. Không cần cài Python, tạo Google Cloud Project hoặc chạy lệnh lập trình. Nếu máy do cơ quan quản lý chặn tiện ích ngoài cửa hàng, cần quản trị viên cho phép cài; không có cơ chế vượt chính sách này.
 
 ## Kết nối đúng tài khoản
+
+Nếu đang dùng 1.0.1, tải 1.0.2 và giải nén đè vào đúng thư mục đã cài, vào trang quản lý tiện ích nhấn **Tải lại / Reload**, đóng dashboard cũ và mở lại bằng biểu tượng tiện ích. Kiểm tra phiên bản hiển thị là **1.0.2**. Chỉ mở lại website không cập nhật tiện ích đã cài.
 
 1. Mở `https://classroom.google.com/` trong chính hồ sơ trình duyệt đã cài tiện ích.
 2. Đăng nhập trên Google như bình thường. Với nhiều tài khoản, chọn tài khoản giáo viên mong muốn.
@@ -50,6 +52,7 @@ Tên lớp thực tế được làm sạch ký tự không hợp lệ. Mỗi ZI
 ## Khi gặp lỗi
 
 - **Could not establish connection / Receiving end does not exist:** với bản cũ, nhấn F5 ở tab Classroom. Để dùng bản sửa 1.0.1, vào trang extensions, nhấn Tải lại / Reload ở Classroom Manager, đóng dashboard cũ và mở lại bằng biểu tượng tiện ích. Kiểm tra Chi tiết → Quyền truy cập trang web cho phép Classroom/Drive.
+- **Thao tác quá thời gian chờ khi Kết nối:** bản 1.0.1 có thời hạn nhận kết quả ngắn hơn thời gian chờ/thu thập danh sách. Cập nhật 1.0.2. Bản mới chờ tối đa 45 giây cho danh sách lớp/bài tập/bài nộp và báo rõ bước bị chậm. Nếu vẫn lỗi, mở trang chủ Classroom, chờ tải xong rồi thử lại; giao diện Google thực tế có thể chưa được adapter hỗ trợ.
 
 - **Chưa đọc được lớp:** về trang chủ Classroom, chờ hiển thị thẻ lớp rồi kết nối lại.
 - **Chưa đọc được bài tập:** mở Bài tập trên lớp của lớp mong muốn; Google có thể đã đổi cấu trúc DOM.

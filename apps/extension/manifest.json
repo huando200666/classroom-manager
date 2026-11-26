@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Classroom Manager – Tải bài nộp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Tải riêng từng bài nộp từ giao diện Google Classroom. Không thu thập thông tin đăng nhập.",
   "minimum_chrome_version": "120",
   "permissions": ["storage", "downloads", "alarms", "scripting"],

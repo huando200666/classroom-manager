@@ -1,5 +1,6 @@
 import { delay } from '../browser-adapter/retry';
-export async function waitFor<T>(read: () => T | undefined, ms = 18000): Promise<T> {
+import { PAGE_WAIT_MS, COLLECT_MAX_MS } from '../shared/timeouts';
+export async function waitFor<T>(read: () => T | undefined, ms = PAGE_WAIT_MS): Promise<T> {
   const initial = read();
   if (initial !== undefined) return initial;
   return new Promise<T>((resolve, reject) => {
@@ -75,7 +76,7 @@ export async function collectDynamic<T extends { id: string }>(
   const positions = scrollers.map((e) => e.scrollTop);
   let stable = 0;
   try {
-    while (Date.now() - started < (options.maxMs ?? 20000)) {
+    while (Date.now() - started < (options.maxMs ?? COLLECT_MAX_MS)) {
       const before = all.size;
       for (const item of read()) all.set(item.id, item);
       if (options.expected && all.size >= options.expected) break;

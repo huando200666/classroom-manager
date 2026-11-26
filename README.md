@@ -23,7 +23,7 @@ npm run preview:web
 
 ## Dùng bản đã build
 
-1. Giải nén `release/Classroom-Manager-1.0.1.zip`.
+1. Giải nén `release/Classroom-Manager-1.0.2.zip`.
 2. Mở `chrome://extensions` hoặc `edge://extensions`.
 3. Bật **Chế độ nhà phát triển** → **Tải tiện ích đã giải nén / Load unpacked**.
 4. Chọn thư mục **Classroom-Manager** có tệp `manifest.json`.
