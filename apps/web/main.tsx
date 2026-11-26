@@ -624,10 +624,17 @@ function App() {
               <div>
                 <strong>Đây là giao diện web xem trước</strong>
                 <p>
-                  Để thao tác với phiên Google đang đăng nhập, cài thư mục{' '}
-                  <code>dist/extension</code> bằng “Load unpacked / Tải tiện ích đã giải nén”, sau
-                  đó bấm biểu tượng tiện ích.
+                  Để thao tác với Google Classroom, tải và giải nén tiện ích Chrome/Edge, cài bằng
+                  “Tải tiện ích đã giải nén”, sau đó bấm biểu tượng tiện ích. Kết nối trực tiếp từ
+                  website sẽ được bổ sung ở phiên bản sau.
                 </p>
+                <a href="https://github.com/huando200666/classroom-manager/releases/latest/download/Classroom-Manager-1.0.1.zip">
+                  Tải tiện ích Chrome/Edge
+                </a>
+                {' · '}
+                <a href="https://github.com/huando200666/classroom-manager/blob/main/docs/CAI-DAT.md">
+                  Hướng dẫn cài đặt
+                </a>
               </div>
             </div>
           )}

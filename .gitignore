@@ -6,3 +6,7 @@ playwright-report/
 *.log
 .browser-profile/
 .npm-cache/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo

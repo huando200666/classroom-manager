@@ -4,6 +4,23 @@
 
 **Trạng thái:** MVP có mã nguồn, bản build và kiểm thử trên trang mô phỏng. Chưa kiểm chứng adapter trên một tài khoản Classroom thực tế. Không bảo đảm mọi phiên bản DOM của Google đều được nhận diện. Khi không xác minh được dữ liệu, tiện ích báo lỗi và không tải dựa trên suy đoán.
 
+## Website và mã nguồn
+
+- Website: https://huando200666.github.io/classroom-manager/
+- Mã nguồn: https://github.com/huando200666/classroom-manager
+- Tải bản cài đặt và mã nguồn ZIP: https://github.com/huando200666/classroom-manager/releases/latest
+
+GitHub Pages phục vụ giao diện web xem trước và liên kết tải tiện ích. Bản này chưa có OAuth/backend để kết nối Classroom trực tiếp từ website. Muốn thao tác với lớp học, dùng tiện ích Chrome/Edge; adapter vẫn cần kiểm chứng trên Classroom thật.
+
+Mỗi lần đẩy mã lên nhánh `main`, GitHub Actions chạy unit/integration tests, build và triển khai website. Thư mục build web là `dist/site`, tách riêng bản tiện ích `dist/extension`. `node_modules`, cache và hồ sơ trình duyệt kiểm thử không đưa vào kho; có thể cài lại thư viện bằng `npm ci`.
+
+```powershell
+npm run build:web
+npm run preview:web
+```
+
+Đường dẫn Vite của bản web được cấu hình cho `/classroom-manager/`. Nếu đổi tên repository, cập nhật `base` của mode `web` trong `vite.config.ts`.
+
 ## Dùng bản đã build
 
 1. Giải nén `release/Classroom-Manager-1.0.1.zip`.
