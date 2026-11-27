@@ -1,78 +1,59 @@
-# Báo cáo kiểm thử
+# Báo cáo kiểm thử 1.2.0
 
-Rà soát bản 1.1.0 ngày 26–27/11/2026 (Asia/Bangkok).
+Ngày 27/11/2026 (Asia/Bangkok).
 
-## Phạm vi
+## Phạm vi và kết quả
 
-Kiểm thử unit/integration bằng Vitest + jsdom; E2E giao diện và tiện ích MV3 bằng Playwright + Chromium. Các trang Classroom/Drive trong E2E được intercept thành fixture có quyền sử dụng, không kết nối dữ liệu sinh viên thực và không đăng nhập Google tự động.
+Vitest/jsdom kiểm tra parser, adapter, hàng đợi, lưu trữ và chính sách cầu nối. Playwright chạy Chromium với tiện ích MV3 unpacked thật, nhưng Classroom/Drive được intercept thành DOM và tệp mô phỏng. Luồng website phục vụ bản production `dist/site` tại origin GitHub Pages mô phỏng để chạy content script đúng manifest; không giả lập tầng cầu nối.
 
-Luồng website mới kiểm thử Google Identity Services và Google REST API bằng response mô phỏng. Kiểm tra đăng nhập, vai trò, phân trang, xuất CSV, đăng xuất, lỗi 401/403 và hủy yêu cầu cũ. Chưa có OAuth Client ID thật nên chưa xác minh đăng nhập Google hoặc dữ liệu lớp thật.
+| Kiểm tra                          | Kết quả                                                                                                   |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Unit/integration                  | **100/100 đạt**, 7 tệp kiểm thử                                                                           |
+| Playwright E2E                    | **7/7 đạt**, 0 unexpected/flaky/skipped                                                                   |
+| Desktop và 390px                  | Không lỗi JavaScript hoặc tràn ngang toàn trang                                                           |
+| Website nhận dữ liệu qua tiện ích | Đọc lớp, bài tập và 5 học viên (3 đã nộp, 2 chưa nộp); không gọi Classroom API                            |
+| Quét danh sách lớn                | 73 sinh viên, đúng 55 đã nộp và 18 chưa nộp                                                               |
+| Tải hàng loạt                     | 54 ZIP hoàn tất; không tải đề bài hoặc bài chưa nộp                                                       |
+| Phục hồi lỗi                      | Nhận diện gián đoạn, Drive từ chối và HTML giả ZIP; thử lại đủ 5/5 tệp, không tải lại 2 tệp đã thành công |
+| Báo cáo                           | Đọc lại CSV có BOM và Excel đúng số hàng; có sinh viên chưa nộp                                           |
 
-## Kết quả cuối cùng
+Không tự động đăng nhập Google, không dùng dữ liệu học viên thật. Người dùng đã xác nhận đọc được danh sách lớp khi đưa Classroom ra trước; kết quả này chưa xác minh toàn bộ bài nộp và tải trên giao diện Google thật. Adapter có thể cần điều chỉnh khi Google thay đổi DOM.
 
-| Kiểm tra                                     | Kết quả                                                                        |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| TypeScript strict và build production        | Đạt, tạo `dist/site` và `dist/extension`                                       |
-| Vitest unit/integration                      | **107/107 đạt**, 7 tệp kiểm thử cho bản 1.1.0                                  |
-| Playwright E2E                               | **10/10 đạt**, báo cáo ghi 0 unexpected/flaky/skipped                          |
-| Giao diện desktop và 390px                   | Đạt, không lỗi JavaScript hoặc tràn ngang toàn trang                           |
-| Quét 73 sinh viên                            | Đúng 55 submitted và 18 missing                                                |
-| Tải nhiều ZIP từ 55 bài đủ điều kiện         | **54 ZIP hoàn tất**, không tải tệp teacher hoặc bài missing                    |
-| Lỗi gián đoạn / Drive từ chối / HTML giả ZIP | Ghi đúng 3 tệp lỗi; 2 tệp khác hoàn tất; hàng đợi vẫn kết thúc                 |
-| Thử lại lỗi sau khi khôi phục nguồn thử      | 5/5 tệp hoàn tất; 2 tệp đã thành công không bị tải lại                         |
-| CSV xuất từ tiện ích                         | Đọc lại tệp, xác nhận BOM và có sinh viên chưa nộp                             |
-| Excel xuất từ tiện ích                       | Mở lại workbook bằng ExcelJS, xác nhận đầy đủ 7 hàng trong fixture 5 sinh viên |
-| Quét lại bài tập                             | Tái sử dụng cùng tab làm việc                                                  |
+## Cầu nối website
 
-Unit/integration bao phủ trạng thái Việt/Anh; tuần; tên và đường dẫn Windows dài; phần mở rộng; chữ ký ZIP; khóa trùng; retry khóa tab và timeout; hàng đợi; vùng bài nộp xác minh; tài khoản; đếm 73/55/18 ở hai ngôn ngữ; nhiều ZIP và tên bị cắt; virtual list; MutationObserver; CSV và ẩn thông tin chẩn đoán; nút tải Drive khả dụng/mơ hồ.
+- Chỉ đúng HTTPS origin và đường dẫn trang chủ dự án được phép. Repository khác trên cùng github.io không nhận diện/kết nối được tiện ích.
+- Background kiểm tra extension ID, tab, main frame và document ID. Unit test từ chối iframe, nguồn thiếu định danh và URL khác.
+- Mở website/probe không làm lộ account/history đã có trong Chrome Storage. Script website tự gửi authorize không tạo được quyền.
+- Click thực vào Kết nối tiện ích mới cấp grant; grant gắn tài khoản sau khi đọc thành công. Trạng thái/history/run khác tài khoản được lọc.
+- Gửi lệnh start bằng script không có click tương ứng bị từ chối. Website không được gọi clear toàn bộ storage.
+- Ngắt kết nối xóa giao diện và quyền của website, giữ nguyên lịch sử tiện ích. Tải lại trang không tự cho phép đọc dữ liệu.
+- Giữ chậm một yêu cầu đọc bài tập, ngắt kết nối rồi mới trả DOM: background hoàn tất nhưng tên bài riêng tư tới muộn không xuất hiện trong thông điệp/trạng thái website.
+- Grant dùng storage session, tồn tại qua worker restart, không dùng lại được bởi tab/tài liệu khác; nonce cũ không ghi đè grant mới sau thu hồi/cấp lại.
 
-Môi trường: Windows, Node 24.14.0, npm 11.9.0, React 19.3.1, Vite 7.3.8, TypeScript 5.9.3, Vitest 3.2.7, Playwright 1.65.1. Dependency được khóa trong `package-lock.json`.
+## Hồi quy chức năng tiện ích
 
-Các lỗi phát hiện và sửa trong quá trình kiểm thử: liên kết điều hướng bị nhận thành tên bài tập; nhãn select chưa rõ cho automation/accessibility; bỏ sót liên kết lượt tải khi chỉ dùng onDeterminingFilename. Luồng tải hiện kết hợp onCreated, onDeterminingFilename, onChanged và đối chiếu lịch sử Downloads theo file ID.
+1. Giao diện trống khi chưa có dữ liệu, không tự đưa dữ liệu mẫu vào production; kiểm tra desktop/390px và chụp ảnh hướng dẫn.
+2. Kết nối tab Classroom mở trước khi cài: tự nạp lại content script, không nhân đôi thao tác tải khi nạp nhiều lần.
+3. Đọc lớp/bài tập, xác minh quyền giáo viên khi quét; đếm 73/55/18 và đối chiếu bộ đếm.
+4. Tải tuần tự nhiều ZIP trên một bài; bỏ bài thiếu tệp, chỉ có PDF hoặc chưa nộp; lấy tên đầy đủ khi nhãn bị cắt.
+5. Tạm dừng/tiếp tục, theo dõi Chrome Downloads thật trên response tệp mô phỏng, lưu lịch sử và xuất báo cáo.
+6. Từng lỗi mạng/quyền/MIME được ghi riêng; hàng đợi vẫn kết thúc, chỉ thử lại tệp lỗi khi nguồn phục hồi.
+7. Quét lại tái sử dụng tab làm việc; tab này không xuất hiện như tab nguồn khi website kết nối lại.
+8. Thay đổi tiến độ nền không ghi đè bản nháp cài đặt; lưu thư mục/định dạng mới đúng.
 
-## Kịch bản E2E
+Unit/integration còn bao phủ trạng thái Việt/Anh, tuần, đường dẫn Windows, định dạng/chữ ký ZIP, khóa trùng, timeout/retry khóa tab, vùng bài làm đúng chủ sở hữu, virtual list, MutationObserver, CSV escaping và ẩn danh chẩn đoán. Chữ ký ZIP chỉ được kiểm thử ở hàm parser; tải production xác minh Downloads/MIME/kích thước, không đọc byte trên ổ đĩa.
 
-1. Website mở màn hình đăng nhập Google, không đưa dữ liệu lớp mẫu vào production; desktop/390px không tràn ngang toàn trang.
-2. Responsive ở desktop và 390px, không tràn ngang toàn trang; chụp ảnh hướng dẫn.
-3. Nạp tiện ích unpacked trong Chromium, kết nối tab Classroom mô phỏng, đọc lớp/bài tập và xác minh quyền giáo viên.
-4. Đọc đủ 73 sinh viên, phân loại đúng 55/18, không có cảnh báo lệch bộ đếm.
-5. Chạy hàng đợi, tạm dừng/tiếp tục, bỏ 18 bài chưa nộp.
-6. Trong 55 bài đã nộp: một người có 2 ZIP, một người chỉ có PDF, một người không có file, một tên ZIP hiển thị bị cắt nhưng title có đầy đủ. Kỳ vọng 54 ZIP, không suy ra số tệp bằng số sinh viên.
-7. Theo dõi trạng thái Chrome Downloads thật trên response tệp mô phỏng; không yêu cầu tệp teacher; lưu lịch sử và xuất CSV.
-8. Gián đoạn mạng một tệp, một trang Drive từ chối truy cập, một response HTML mang tên ZIP; tiếp tục xử lý và thử lại riêng lỗi sau khi khôi phục nguồn.
-9. Đọc lại tệp CSV/XLSX đã xuất; quét lại cùng bài để kiểm tra tái sử dụng tab.
-10. Tab đã mở trước khi cài tiện ích không có content script: tự nạp kết nối, giữ nguyên trang và không nhân đôi thao tác tải khi nạp script nhiều lần.
-11. Chỉnh tên thư mục và thêm định dạng PDF, phát cập nhật trạng thái nền, xác nhận bản nháp được giữ và lưu được. Ca này chạy giao diện thật với cầu nối Chrome được mô phỏng.
-12. Website đăng nhập qua SDK mô phỏng, đọc lớp giáo viên/học viên và roster nhiều trang; tự tải bài nộp, giữ điểm 0, không gán chưa nộp cho người thiếu bản ghi; mở liên kết Drive và đọc lại CSV có BOM.
-13. Học viên chỉ gọi bài nộp có `userId=me`, không yêu cầu roster.
-14. Đăng xuất và Google 401 xóa dữ liệu cũ; kiểm tra token không nằm trong localStorage/sessionStorage.
-15. Lỗi quyền 403 không bị hiển thị thành danh sách bài nộp trống hợp lệ hoặc cho xuất báo cáo.
-16. Đổi lớp khi request cũ bị giữ lại: lớp mới vẫn hiển thị đúng, dữ liệu cũ đến muộn không ghi đè.
+## Lệnh tái lập
 
-## Lỗi phát hiện trong lần rà soát 26/11
+```powershell
+npm ci
+npm test
+npm run build
+npm run build:web
+npm run test:e2e
+npm run package
+```
 
-- **Đọc danh sách khi Classroom nằm nền (sửa ở 1.0.3):** người dùng xác nhận việc chuyển sang tab Classroom ngay sau Kết nối giúp đọc được lớp. Adapter tạm kích hoạt Classroom cho ba lệnh đọc danh sách và khôi phục tab trước đó khi không có lựa chọn mới từ người dùng. Bổ sung 5 unit tests về thứ tự kích hoạt/đọc/khôi phục, giữ lựa chọn mới, xử lý lỗi và không phát lại lệnh tải. Ca E2E kết nối bắt đầu từ tab Classroom không hoạt động, kiểm tra Chrome API xác nhận tab được kích hoạt trước `courses` và dashboard được khôi phục. Dữ liệu trả về vẫn do content script đọc từ fixture. Headless Chromium có thể coi nhiều document cùng visible, nên kiểm tra trạng thái tab qua Chrome API thay vì giả định Page Visibility phản ánh tab thật trong môi trường headless.
+E2E cần Chromium hỗ trợ nạp tiện ích, có thể đặt `CM_CHROMIUM_PATH`. Phải build web và extension trước E2E vì ca website dùng các artifact này. Báo cáo HTML nằm ở `playwright-report/index.html`; test-results/profile không đưa lên GitHub. Ảnh tại `docs/dashboard-desktop.png`, `docs/dashboard-mobile.png`, `docs/website-bridge-data.png`.
 
-- **Timeout nhận kết quả ngắn hơn thao tác đọc (sửa ở 1.0.2):** chờ trang tối đa 18 giây rồi thu thập danh sách tối đa 20 giây có thể vượt thời hạn nhận phản hồi 26 giây. Ba ca hồi quy `courses/assignments/students` với phản hồi ở giây 32 đều thất bại ở mã cũ và đạt sau sửa. Dùng chung mốc thời gian giữa content script và browser adapter; thời hạn đọc danh sách là 45 giây, có tên thao tác trong thông báo. Kiểm tra thêm lệnh đọc bị treo vẫn kết thúc và lệnh tải không bị phát lại khi timeout. Đây là lỗi tái hiện được trong mã, chưa đủ xác nhận là nguyên nhân duy nhất trên mọi trang Classroom thật.
-
-- **Mất bản nháp cài đặt:** mỗi lần nhận lại state từ Chrome Storage, React nhận một object settings mới và ghi đè các trường đang sửa dù nội dung settings không thay đổi. Đã tái hiện bằng E2E thất bại (thư mục `Bai_nop_2026` bị đổi về `Classroom_Downloads`); sửa bằng cách chỉ đồng bộ khi nội dung settings đã lưu thay đổi. Ca hồi quy đã đạt sau sửa.
-- **Gói phát hành cũ:** README và package là 1.0.1 nhưng thư mục release chỉ có ZIP 1.0.0. Lệnh package trước đây không build lại nên có thể đóng gói mã cũ. Đã thêm build vào lệnh package, kiểm tra phiên bản manifest và tự tạo SHA256SUMS cho các ZIP phát hành.
-- **Báo cáo kiểm thử lỗi thời:** số lượng 72/3 không phản ánh các ca kiểm thử kết nối đã được thêm. Báo cáo được cập nhật theo kết quả chạy lại.
-
-Từ 1.1.0, website dùng `GoogleSession` và `ClassroomClient`; `apps/web/api.ts` chỉ tiếp tục phục vụ phần tiện ích DOM tùy chọn. Kiểm thử mô phỏng không xác nhận website đã đăng nhập hoặc đọc dữ liệu Classroom thật.
-
-Ảnh đã tạo và kiểm tra: [desktop](dashboard-desktop.png), [mobile](dashboard-mobile.png), [kết quả trên dữ liệu mô phỏng](download-tested.png).
-
-Ảnh luồng API với dữ liệu mô phỏng: [web desktop](web-classroom-data.png), [web mobile](web-classroom-mobile.png).
-
-## Chưa xác minh
-
-- OAuth Client ID thật, cấu hình origin/test users, chính sách Workspace và dữ liệu thật qua Classroom API.
-
-- DOM và thao tác Drive trên tài khoản Classroom production.
-- Chính sách tải nhiều tệp, kiểm tra bảo mật, CORS/referrer thực của từng hồ sơ Google.
-- Tương thích Edge riêng biệt và Firefox.
-- Chữ ký/khả năng mở của nội dung ZIP tải thực tế.
-- Tải hàng nghìn sinh viên và hạn mức storage khi lịch sử rất lớn.
-
-Xem `GIOI-HAN.md`. Báo cáo Playwright được tạo trong `playwright-report`, kết quả từng lượt trong `test-results` (không đóng gói dữ liệu profile trình duyệt).
+Dependency và phiên bản cụ thể được khóa trong `package-lock.json`. Build TypeScript strict áp dụng cho cả hai bản web/extension. Tệp ZIP phát hành có manifest trùng phiên bản package và đi kèm SHA-256.

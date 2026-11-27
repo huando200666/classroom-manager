@@ -14,7 +14,6 @@ import {
   studentId,
 } from '../fixtures/classroom';
 import type { AppState } from '../../packages/shared/types';
-import { mockGoogleWeb } from '../fixtures/google-web';
 
 function browserPath() {
   if (process.env.CM_CHROMIUM_PATH) return process.env.CM_CHROMIUM_PATH;
@@ -39,21 +38,16 @@ function browserPath() {
 test('giao diện thật, trạng thái trống, điều hướng và responsive', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await mockGoogleWeb(page);
   await page.goto('http://127.0.0.1:5173');
   await expect(
-    page.getByRole('heading', { name: 'Lớp học của bạn. Kết nối ngay trên web.' }),
+    page.getByRole('heading', { name: 'Quản lý bài nộp, nhẹ nhàng hơn.' }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Đăng nhập bằng Google', exact: true }),
-  ).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Tải tất cả bài nộp', exact: true })).toHaveCount(
-    0,
-  );
+  await expect(page.getByRole('button', { name: 'Kết nối tiện ích', exact: true })).toBeDisabled();
+  await expect(page.getByText('Quét Classroom qua tiện ích', { exact: true })).toBeVisible();
   await page.screenshot({ path: 'docs/dashboard-desktop.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
-    page.getByRole('heading', { name: 'Lớp học của bạn. Kết nối ngay trên web.' }),
+    page.getByRole('heading', { name: 'Quản lý bài nộp, nhẹ nhàng hơn.' }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'docs/dashboard-mobile.png', fullPage: true });

@@ -11,7 +11,6 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    env: { VITE_GOOGLE_CLIENT_ID: '1234567890-e2e.apps.googleusercontent.com' },
     command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1',
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: true,

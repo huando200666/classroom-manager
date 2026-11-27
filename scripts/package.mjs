@@ -43,7 +43,6 @@ await zip(`Classroom-Manager-${version}-source.zip`, (a) => {
     '.gitignore',
     '.prettierrc.json',
     '.prettierignore',
-    '.env.example',
   ])
     a.file(f, { name: f });
 });

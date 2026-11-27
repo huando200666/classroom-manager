@@ -1,4 +1,11 @@
 @import 'tailwindcss';
+.bridge-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 14px 0;
+}
 :root {
   font-family: Inter, 'Segoe UI', Arial, sans-serif;
   color: #20304b;

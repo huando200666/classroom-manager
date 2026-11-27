@@ -19,5 +19,13 @@ await build({
   sourcemap: true,
 });
 await mkdir('dist/extension', { recursive: true });
+await build({
+  entryPoints: ['apps/extension/website.ts'],
+  outfile: 'dist/extension/website.js',
+  bundle: true,
+  format: 'iife',
+  target: 'chrome120',
+  sourcemap: true,
+});
 await copyFile('apps/extension/manifest.json', 'dist/extension/manifest.json');
 console.log('Bản cài đặt: dist/extension');

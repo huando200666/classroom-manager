@@ -1,10 +1,10 @@
 # Lỗi đã xử lý và giới hạn còn lại
 
-## Website API 1.1.0
+## Website qua tiện ích 1.2.0
 
-Website không dùng DOM Classroom. Cần bật Classroom API, OAuth Client ID loại Web application với đúng origin và cho phép tài khoản thử/ứng dụng theo chính sách Google. Code và thử nghiệm mô phỏng không thay thế kiểm chứng đăng nhập và dữ liệu thật sau khi có Client ID. Tài khoản học viên chỉ xem bài của mình. Token trong RAM, tải lại trang cần đăng nhập lại; phiên hết hạn cần thao tác đăng nhập mới. Chưa có đồng bộ nền, lưu lịch sử trên server, tải ZIP hàng loạt hoặc chấm Python. Chỉ hiển thị lớp ACTIVE và bài tập PUBLISHED mà API trả về. Không suy đoán trạng thái khi roster có người chưa có bản ghi bài nộp.
+Website dùng content script của tiện ích đã cài để đọc DOM Classroom, không dùng OAuth/Classroom API. Cần Chrome/Edge trên máy tính, cùng hồ sơ trình duyệt với Classroom và tiện ích 1.2.0. Chỉ trang chủ dự án tại `https://huando200666.github.io/classroom-manager/` (hoặc `index.html`) được kết nối. Localhost, tệp HTML và repository khác không được cấp quyền.
 
-Phần giới hạn DOM bên dưới áp dụng cho tiện ích Chrome/Edge tùy chọn.
+Quyền cấp sau thao tác bấm trực tiếp, theo tab/document và mất khi tải lại trang. Ngắt website chặn dữ liệu đến muộn, nhưng không xóa lịch sử tiện ích hoặc dừng hàng đợi đang chạy. Nếu đang tải/tạm dừng mà cần kết nối lại, dùng dashboard của tiện ích để quản lý phiên cũ. Website không có lệnh xóa toàn bộ storage. Các giới hạn DOM bên dưới áp dụng cho cả website và dashboard tiện ích.
 
 ## Đã có biện pháp xử lý trong mã và kiểm thử
 

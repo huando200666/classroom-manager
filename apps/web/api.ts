@@ -1,13 +1,12 @@
 import { emptyState, type AppState } from '../../packages/shared/types';
 import { connectionError } from '../../packages/shared/connection-errors';
+import { bridgeStatus, websiteRequest } from './bridge';
 export const installed = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
 export async function request<T = AppState>(command: string, args: object = {}): Promise<T> {
   if (!installed) {
-    if (command === 'state') return emptyState() as T;
-    if (command === 'tabs') return [] as T;
-    throw new Error(
-      'Mở giao diện từ biểu tượng tiện ích đã cài đặt để kết nối phiên Google Classroom.',
-    );
+    if (!bridgeStatus().authorized && command === 'state') return emptyState() as T;
+    if (!bridgeStatus().authorized && command === 'tabs') return [] as T;
+    return websiteRequest<T>(command, args);
   }
   let result;
   try {

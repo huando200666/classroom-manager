@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { WebClassroomApp } from './WebClassroomApp';
 import { version as appVersion } from '../../package.json';
 import { createRoot } from 'react-dom/client';
 import {
@@ -38,6 +37,13 @@ import {
 } from 'lucide-react';
 import { request, installed, saveBlob } from './api';
 import {
+  bridgeStatus,
+  subscribeBridge,
+  probeBridge,
+  authorizeBridge,
+  disconnectBridge,
+} from './bridge';
+import {
   emptyState,
   statusLabels,
   fileLabels,
@@ -68,6 +74,8 @@ const size = (bytes?: number) =>
       ? `${(bytes / 1048576).toFixed(1)} MB`
       : `${(bytes / 1024).toFixed(1)} KB`;
 function App() {
+  const [websiteBridge, setWebsiteBridge] = useState(bridgeStatus);
+  const canControl = installed || websiteBridge.authorized;
   const [state, setState] = useState<AppState>(emptyState);
   const [page, setPage] = useState('Tổng quan');
   const [tabs, setTabs] = useState<{ id: number; title: string; url: string }[]>([]);
@@ -109,9 +117,29 @@ function App() {
         if (live) setError(e.message);
       });
     const changed = () => void refresh();
+    const bridgeChanged = () => {
+      if (!live) return;
+      const current = bridgeStatus();
+      setWebsiteBridge(current);
+      if (!current.authorized) {
+        setState(emptyState());
+        setTabs([]);
+        setTab('');
+        setCourse('');
+        setAssignment('');
+        setWeek('');
+        setQuery('');
+      } else void refresh();
+    };
+    const unsubscribe = !installed ? subscribeBridge(bridgeChanged) : () => {};
+    if (!installed)
+      void probeBridge().then(() => {
+        if (live) setWebsiteBridge(bridgeStatus());
+      });
     if (installed) chrome.storage.onChanged.addListener(changed);
     return () => {
       live = false;
+      unsubscribe();
       if (installed) chrome.storage.onChanged.removeListener(changed);
     };
   }, []);
@@ -160,6 +188,27 @@ function App() {
       setNotice(
         'Đã đọc danh sách lớp từ tab được chọn. Quyền giáo viên sẽ được xác minh khi quét bài nộp.',
       );
+    });
+  }
+  async function connectWebsite() {
+    await perform('bridge', async () => {
+      await authorizeBridge();
+      const available = await request<typeof tabs>('tabs');
+      setTabs(available);
+      if (available.length === 1) {
+        setTab(String(available[0].id));
+        setState(await request('connect', { tabId: available[0].id }));
+        setCourse('');
+        setAssignment('');
+        setNotice(
+          'Đã đọc danh sách lớp từ Classroom qua tiện ích. Chọn lớp và bài tập để quét dữ liệu.',
+        );
+      } else
+        setNotice(
+          available.length
+            ? 'Chọn tab Classroom bên dưới rồi bấm Kết nối.'
+            : 'Mở Google Classroom trong cùng trình duyệt, đăng nhập rồi Làm mới tab.',
+        );
     });
   }
   async function chooseCourse(id: string) {
@@ -234,25 +283,31 @@ function App() {
       <button
         className="primary"
         disabled={!!busy || !run?.students.length || active || !!run?.files.length}
+        data-cm-action="start"
         onClick={() => void command('start')}
       >
         <Download size={17} />
         Tải tất cả bài nộp
       </button>
       {run?.status === 'running' && (
-        <button onClick={() => void command('pause')} disabled={!!busy}>
+        <button data-cm-action="pause" onClick={() => void command('pause')} disabled={!!busy}>
           <Pause size={16} />
           Tạm dừng
         </button>
       )}
       {run?.status === 'paused' && (
-        <button onClick={() => void command('resume')} disabled={!!busy}>
+        <button data-cm-action="resume" onClick={() => void command('resume')} disabled={!!busy}>
           <Play size={16} />
           Tiếp tục
         </button>
       )}
       {active && (
-        <button className="danger-text" onClick={() => void command('stop')} disabled={!!busy}>
+        <button
+          className="danger-text"
+          data-cm-action="stop"
+          onClick={() => void command('stop')}
+          disabled={!!busy}
+        >
           <Square size={16} />
           Dừng
         </button>
@@ -267,6 +322,7 @@ function App() {
             run?.files.some((f) => f.status === 'cancelled')
           )
         }
+        data-cm-action="retry"
         onClick={() => void command('retry')}
       >
         <RotateCcw size={16} />
@@ -475,6 +531,7 @@ function App() {
                           className="icon-button"
                           title="Thử lại tệp này"
                           disabled={!!busy || active}
+                          data-cm-action="retry"
                           onClick={() => void command('retry', { key: f.key })}
                         >
                           <RotateCcw size={16} />
@@ -615,7 +672,11 @@ function App() {
                     : 'Mọi dữ liệu được quản lý cục bộ trên thiết bị của bạn.'}
               </p>
             </div>
-            <button onClick={() => void command('folder')} disabled={!installed}>
+            <button
+              data-cm-action="folder"
+              onClick={() => void command('folder')}
+              disabled={!canControl}
+            >
               <FolderOpen size={17} />
               Mở Downloads
             </button>
@@ -624,16 +685,55 @@ function App() {
             <div className="alert info">
               <Info size={20} />
               <div>
-                <strong>Đây là giao diện web xem trước</strong>
+                <strong>Quét Classroom qua tiện ích</strong>
                 <p>
-                  Để thao tác với Google Classroom, tải và giải nén tiện ích Chrome/Edge, cài bằng
-                  “Tải tiện ích đã giải nén”, sau đó bấm biểu tượng tiện ích. Kết nối trực tiếp từ
-                  website sẽ được bổ sung ở phiên bản sau.
+                  Mở Google Classroom và đăng nhập trong cùng Chrome/Edge. Bấm Kết nối tiện ích để
+                  cho phép website đọc lớp, bài nộp và điều khiển phiên tải qua tiện ích. Không cần
+                  Google Cloud hoặc API key.
                 </p>
+                <p role="status">
+                  {websiteBridge.available
+                    ? `Đã nhận diện tiện ích ${websiteBridge.version}${websiteBridge.authorized ? ' · Đã cho phép kết nối' : ''}.`
+                    : 'Chưa tìm thấy tiện ích hỗ trợ website. Cập nhật tiện ích rồi nhấn F5 tại website.'}
+                </p>
+                <div className="bridge-actions">
+                  {websiteBridge.authorized ? (
+                    <button
+                      onClick={() => {
+                        disconnectBridge();
+                        setNotice(
+                          'Đã ngắt website. Phiên tải đang chạy vẫn tiếp tục; dữ liệu trong tiện ích và tệp đã tải được giữ nguyên.',
+                        );
+                      }}
+                    >
+                      <PlugZap size={17} /> Ngắt kết nối website
+                    </button>
+                  ) : (
+                    <button
+                      className="primary"
+                      data-cm-connect
+                      disabled={!websiteBridge.available || !!busy}
+                      onClick={() => void connectWebsite()}
+                    >
+                      <PlugZap size={17} /> Kết nối tiện ích
+                    </button>
+                  )}
+                  <a href="https://classroom.google.com/" target="_blank" rel="noopener noreferrer">
+                    Mở Google Classroom
+                  </a>
+                  {!websiteBridge.available && (
+                    <button
+                      disabled={!!busy}
+                      onClick={() => void probeBridge().then(setWebsiteBridge)}
+                    >
+                      <RefreshCw size={16} /> Kiểm tra lại tiện ích
+                    </button>
+                  )}
+                </div>
                 <a
                   href={`https://github.com/huando200666/classroom-manager/releases/download/v${appVersion}/Classroom-Manager-${appVersion}.zip`}
                 >
-                  Tải tiện ích Chrome/Edge
+                  Tải / cập nhật tiện ích Chrome/Edge
                 </a>
                 {' · '}
                 <a href="https://github.com/huando200666/classroom-manager/blob/main/docs/CAI-DAT.md">
@@ -714,7 +814,8 @@ function App() {
                   </button>
                   <button
                     className="link-button"
-                    disabled={!installed || !!busy}
+                    disabled={!canControl || !!busy}
+                    data-cm-action="open"
                     onClick={() => void command('open')}
                   >
                     Mở Google Classroom <ExternalLink size={14} />
@@ -1034,6 +1135,7 @@ function App() {
                               className="icon-button"
                               aria-label="Hiện tệp trong thư mục"
                               disabled={h.status !== 'complete'}
+                              data-cm-action="show"
                               onClick={() => void command('show', { id: h.downloadId })}
                             >
                               <FolderOpen size={17} />
@@ -1133,6 +1235,7 @@ function App() {
                 <button
                   className="primary"
                   disabled={!draft.formats.length}
+                  data-cm-action="settings"
                   onClick={() =>
                     void perform('settings', async () => {
                       setState(await request('settings', { settings: draft }));
@@ -1144,7 +1247,7 @@ function App() {
                   Lưu cài đặt
                 </button>
               </fieldset>
-              <div className="danger-zone">
+              <div className="danger-zone" hidden={!installed}>
                 <h3>Xóa dữ liệu cục bộ</h3>
                 <p>
                   Xóa lớp, danh sách sinh viên, nhật ký và lịch sử trong tiện ích. Các tệp đã tải
@@ -1282,4 +1385,4 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById('root')!).render(installed ? <App /> : <WebClassroomApp />);
+createRoot(document.getElementById('root')!).render(<App />);

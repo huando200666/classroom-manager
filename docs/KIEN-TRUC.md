@@ -1,18 +1,22 @@
 # Kiến trúc Classroom Manager
 
-## Website Google OAuth/API từ 1.1.0
+## Website qua tiện ích từ 1.2.0
 
-`WebClassroomApp` dùng Google Identity Services để lấy access token qua popup do người dùng bấm. `ClassroomClient` gửi GET tới Google API bằng Authorization header, đọc đủ phân trang và hủy yêu cầu cũ khi đổi lớp hoặc đăng xuất. Vai trò lấy từ danh sách lớp `teacherId=me` và `studentId=me`. Học viên không yêu cầu roster và luôn dùng `userId=me` khi đọc bài nộp. Google API là nơi thực thi quyền truy cập; vai trò ở UI không cấp thêm quyền.
+Website và dashboard tiện ích dùng chung `App`. Bản web dùng `apps/web/bridge.ts` gửi thông điệp có mã yêu cầu qua `window.postMessage` cho `website.ts` trong isolated world. Content script chuyển lệnh bằng `chrome.runtime.sendMessage` vào service worker. Website không cần biết extension ID và không dùng `externally_connectable`; bản unpacked giữ định danh khi cập nhật cùng thư mục.
 
-Token và dữ liệu lớp chỉ ở bộ nhớ tab, không ghi Chrome Storage/localStorage/cookie, không có refresh token hoặc backend riêng. Phiên hết hạn/401 đưa UI về đăng nhập và xóa dữ liệu cũ. Callback/yêu cầu đến muộn không được áp dụng sau khi đổi phiên. Liên kết bài làm được kiểm tra giao thức HTTPS và render bằng React; không render HTML từ dữ liệu Google. CSV dùng bộ escaping hiện có.
+Chỉ main frame tại `https://huando200666.github.io/classroom-manager/` hoặc `index.html` được cấp quyền. Probe chỉ trả phiên bản tiện ích, không trả trạng thái riêng tư. Content script cấp quyền khi nhận click `isTrusted` vào nút Kết nối tiện ích; lệnh authorize do script trang tự gửi không được chấp nhận. Các lệnh tải/cài đặt cần click trực tiếp tương ứng và được dùng một lần trong 5 giây. Background kiểm tra extension ID, URL nguồn/tab, frame và document ID, rồi đối chiếu grant trong `chrome.storage.session`. Mỗi lần cấp lại tạo nonce mới; đóng tab thu hồi grant, tải lại tài liệu cần cấp lại.
 
-GitHub Pages build với `VITE_GOOGLE_CLIENT_ID` lấy từ repository variable `GOOGLE_CLIENT_ID`. Thiếu mã thì hiển thị cấu hình chờ, không giả đăng nhập. Quyền chỉ đọc, không ghi điểm hoặc sửa bài tập. Xem [cấu hình OAuth](GOOGLE-OAUTH.md) và [token model chính thức](https://developers.google.com/identity/oauth2/web/guides/use-token-model).
+Grant chỉ gắn với tài khoản sau khi đọc thành công từ tab Classroom được chọn. Trạng thái trước đó rỗng; history/run khác tài khoản bị lọc. Các lệnh điều khiển phiên tải phải khớp tài khoản của run. Thao tác thu hồi xử lý ngoài hàng đợi DOM dài; background kiểm tra lại nonce và content script kiểm tra epoch trước khi trả dữ liệu để chặn phản hồi tới muộn. Website xóa bộ nhớ hiển thị khi ngắt, không xóa Chrome Storage local và không dừng hàng đợi đang chạy. Website không được gọi lệnh clear toàn bộ dữ liệu.
 
-## Luồng dữ liệu tiện ích DOM tùy chọn
+Không có OAuth token hoặc Google API trong bản hiện tại. Website giữ dữ liệu trong RAM, không ghi localStorage/cookie và không gửi dữ liệu lớp tới backend riêng. GitHub Pages chỉ phục vụ tệp tĩnh. Các event storage tới website chỉ là tín hiệu thay đổi, không chứa raw dữ liệu; website phải yêu cầu trạng thái qua kiểm tra quyền.
+
+## Luồng dữ liệu
 
 ```mermaid
 flowchart LR
-  UI[Dashboard React trong extension] -->|runtime message| SW[MV3 service worker]
+  WEB[Website GitHub Pages] -->|postMessage sau click cho phép| BR[Website content script]
+  BR -->|runtime message + grant tab/document| SW[MV3 service worker]
+  UI[Dashboard React trong extension] -->|runtime message| SW
   SW --> DB[Chrome Storage local]
   SW --> BA[Browser Adapter]
   BA --> CS[Content script]
@@ -25,7 +29,7 @@ flowchart LR
   UI --> X[CSV / Excel / JSON chẩn đoán]
 ```
 
-Dashboard là extension page, không dùng trang web bên ngoài để kết nối. Bản `npm run dev` sử dụng cùng giao diện nhưng không có quyền gọi Chrome extension; không tự tạo số liệu minh họa.
+Dashboard extension dùng runtime trực tiếp. Website được kết nối qua cầu nối giới hạn ở URL dự án. Bản `npm run dev` sử dụng cùng giao diện nhưng không thuộc URL được cấp quyền; không có dữ liệu minh họa tự sinh.
 
 ## Ranh giới và mô-đun
 
@@ -65,19 +69,19 @@ CSV có UTF-8 BOM, quote escaping và chống công thức khi ô bắt đầu b
 
 ## Quyền và bảo mật
 
-Chỉ `storage`, `downloads`, `alarms`, `scripting` và host permissions Classroom/Drive. Quyền scripting nạp lại duy nhất tệp `content.js` đóng gói sẵn vào main frame thuộc hai miền cho phép, khi Chrome báo tab chưa có bộ nhận. Không tải lại trang của giảng viên, không chạy mã lấy từ mạng. Không xin `cookies`, `identity`, `debugger`, `<all_urls>`, quyền native messaging hay quyền đọc toàn bộ tab không liên quan. Chrome cho phép xem URL/tab có host permission mà không cần quyền tabs toàn cục.
+Chỉ `storage`, `downloads`, `alarms`, `scripting` và host permissions Classroom/Drive/`huando200666.github.io`. Quyền host website có độ rộng theo origin của Chrome; content script và background giới hạn thêm đúng đường dẫn dự án. Quyền scripting nạp lại duy nhất tệp `content.js` đóng gói sẵn vào main frame Classroom/Drive khi Chrome báo tab chưa có bộ nhận. Không tải lại trang của giảng viên, không chạy mã lấy từ mạng. Không xin `cookies`, `identity`, `debugger`, `<all_urls>`, quyền native messaging hay quyền đọc toàn bộ tab không liên quan.
 
 Từ 1.0.1, lỗi không có bộ nhận được phục hồi bằng scripting.executeScript trong isolated world và gửi lại lệnh đúng một lần. Nếu cổng đóng giữa chừng, không tự phát lại lệnh vì có thể thao tác tải đã được thực hiện. Script tự thay bộ nhận cũ khi nạp lại để không bấm tải trùng. Lỗi dashboard đã bị vô hiệu hóa sau cập nhật được đổi thành hướng dẫn đóng trang và mở lại từ biểu tượng tiện ích.
 
-Background chỉ nhận lệnh app từ extension page cùng ID; content script chỉ nhận lệnh cùng extension ID. Không có externally_connectable, cửa sau web→extension hoặc tải mã từ xa. CSP chỉ cho script nội bộ, React escape text mặc định. Không thao tác chấm điểm, trả bài, xóa hoặc thông báo sinh viên.
+Background nhận `cm-app` từ extension page cùng ID và `cm-web` từ website content script đã kiểm tra nguồn/grant. Content script Classroom/Drive chỉ nhận lệnh cùng extension ID. Không có externally_connectable hoặc tải mã từ xa. CSP extension chỉ cho script nội bộ, React escape text mặc định. Không thao tác chấm điểm, trả bài, xóa hoặc thông báo sinh viên.
 
 ## Tích hợp chấm Python tương lai
 
 `packages/grading/contract.ts` khai báo GradingSandbox. Chưa có implementation. Worker chấm phải là môi trường độc lập có giới hạn CPU/RAM, network=false và không nhận cookie, token hay Chrome profile. Không chạy mã sinh viên trong extension.
 
-## Đề xuất nâng cấp thành website riêng (26/11/2026)
+## Phương án API trong tương lai
 
-Các mục dưới đây là đề xuất, chưa được triển khai trong bản MVP. Có thể tái sử dụng dashboard, mô hình bài nộp, bộ lọc và phần xuất báo cáo; cần thay tầng runtime/DOM/Chrome Downloads bằng kết nối API.
+Các mục dưới đây là hướng tham khảo nếu sau này cần website chạy độc lập với tiện ích, chưa áp dụng cho bản 1.2.0. Bản OAuth/API thử nghiệm 1.1.0 đã được bỏ khỏi website hiện tại theo lựa chọn dùng tiện ích; mã cũ còn trong lịch sử Git. Có thể tái sử dụng dashboard và mô hình bài nộp, nhưng phải thay tầng DOM/Chrome Downloads và xác minh quyền Google.
 
 | Ưu tiên | Nâng cấp                                                                                                                            | Điều kiện kiểm thử trước khi sử dụng                                                                                                                       |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -88,7 +92,7 @@ Các mục dưới đây là đề xuất, chưa được triển khai trong b�
 
 Luồng dự kiến: trình duyệt → backend có phiên đăng nhập → Classroom/Drive API → hàng đợi xử lý và kho kết quả tạm thời → trình duyệt tải kết quả. Cần xác định thời hạn giữ tệp và lịch sử; bảo vệ token trên backend; không đưa client secret vào mã giao diện.
 
-Việc chạy được giao diện và các fixture hiện tại chưa xác nhận kết nối thật. Cần Google Cloud Project, bật API, cấu hình OAuth cho địa chỉ website và tài khoản thử có quyền giáo viên. Việc xác minh ứng dụng và cho phép từ quản trị viên phụ thuộc phạm vi quyền và cách phát hành.
+Nếu chọn phương án API trong tương lai, cần Google Cloud Project, bật API, cấu hình OAuth cho địa chỉ website và kiểm chứng bằng tài khoản thử có quyền giáo viên. Việc xác minh ứng dụng và cho phép từ quản trị viên phụ thuộc phạm vi quyền và cách phát hành. Các yêu cầu này không áp dụng cho cầu nối tiện ích hiện tại.
 
 Tham khảo: [quyền Classroom API](https://developers.google.com/workspace/classroom/guides/auth), [OAuth cho web server](https://developers.google.com/identity/protocols/oauth2/web-server), [tải và xuất tệp Drive](https://developers.google.com/workspace/drive/api/guides/manage-downloads).
 

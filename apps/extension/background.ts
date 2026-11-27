@@ -14,9 +14,17 @@ import { matchesDownload } from '../../packages/download-manager/capture';
 import { validCompletedDownload } from '../../packages/shared/files';
 import { csv, reportRows } from '../../packages/shared/reports';
 import { isTruncated, extension } from '../../packages/submission-parser';
+import {
+  validWebSender,
+  WEB_COMMANDS,
+  websiteState,
+  WebAuthorizationError,
+} from '../../packages/web-bridge/policy';
+import { WebGrants } from './web-grants';
 
 const store = new ChromeStore();
 const browser = new ChromiumAdapter();
+const webGrants = new WebGrants();
 let state: AppState;
 let chain = Promise.resolve();
 let ticking = false;
@@ -72,7 +80,7 @@ async function dispatch(command: string, args: any) {
     case 'state':
       return s;
     case 'tabs':
-      return browser.listClassroomTabs();
+      return (await browser.listClassroomTabs()).filter((tab) => tab.id !== s.run?.workTabId);
     case 'open':
       return browser.openClassroom();
     case 'connect': {
@@ -483,6 +491,77 @@ chrome.action.onClicked.addListener(() => {
   });
 });
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.channel === 'cm-web') {
+    if (!validWebSender(sender, chrome.runtime.id)) return;
+    if (message.command === 'authorize' || message.command === 'revoke') {
+      const operation =
+        message.command === 'authorize' ? webGrants.authorize(sender) : webGrants.revoke(sender);
+      void operation.then(
+        () => respond({ ok: true, data: true }),
+        () =>
+          respond({
+            ok: false,
+            code: 'AUTH_REQUIRED',
+            error: 'Không lưu được kết nối website. Tải lại tiện ích rồi thử lại.',
+          }),
+      );
+      return true;
+    }
+    if (!WEB_COMMANDS.has(message.command)) {
+      respond({ ok: false, error: 'Website không được gọi lệnh này.' });
+      return;
+    }
+    const reading = ['connect', 'assignments', 'scan'].includes(message.command);
+    if (reading && discovery) {
+      respond({ ok: false, error: 'Đang đọc Classroom. Vui lòng chờ thao tác hiện tại.' });
+      return;
+    }
+    if (reading) discovery = true;
+    void serial(async () => {
+      const grant = await webGrants.get(sender);
+      if (!grant) throw new WebAuthorizationError();
+      const current = await get();
+      if (grant.account && current.account?.scope !== grant.account)
+        throw new WebAuthorizationError();
+      if (
+        ['start', 'pause', 'resume', 'stop', 'retry'].includes(message.command) &&
+        (!grant.account || current.run?.account !== grant.account)
+      )
+        throw new WebAuthorizationError();
+      if (
+        message.command === 'show' &&
+        !current.history.some(
+          (entry) =>
+            entry.account === grant.account &&
+            entry.downloadId === message.args?.id &&
+            entry.status === 'complete',
+        )
+      )
+        throw new Error('Không tìm thấy tệp thuộc tài khoản đang kết nối.');
+      const result = await dispatch(message.command, message.args || {});
+      if ((await webGrants.get(sender))?.nonce !== grant.nonce) throw new WebAuthorizationError();
+      if (message.command === 'connect') {
+        await webGrants.account(sender, grant.nonce, current.account?.scope);
+        grant.account = current.account?.scope;
+      }
+      if (result && typeof result === 'object' && 'schema' in result)
+        return websiteState(result as AppState, grant.account);
+      return result;
+    })
+      .then(
+        (data) => respond({ ok: true, data }),
+        (error) =>
+          respond({
+            ok: false,
+            code: error instanceof WebAuthorizationError ? 'AUTH_REQUIRED' : undefined,
+            error: String(error.message || error),
+          }),
+      )
+      .finally(() => {
+        if (reading) discovery = false;
+      });
+    return true;
+  }
   if (
     sender.id !== chrome.runtime.id ||
     !sender.url?.startsWith(chrome.runtime.getURL('')) ||
@@ -505,5 +584,8 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       if (isDiscovery) discovery = false;
     });
   return true;
+});
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void webGrants.removeTab(tabId);
 });
 void chrome.alarms.create('cm-queue', { periodInMinutes: 0.5 });

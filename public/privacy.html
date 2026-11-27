@@ -50,32 +50,36 @@
       </p>
       <h2>Dữ liệu được đọc</h2>
       <p>
-        Khi bạn đăng nhập và cấp quyền Google, website đọc thông tin tài khoản, lớp học, bài tập,
-        bài nộp và danh sách học viên trong phạm vi tài khoản được Google cho phép. Học viên được
-        yêu cầu bài nộp của chính mình; giáo viên có thể xem bài nộp của lớp họ dạy. Website không
-        tạo, sửa hoặc xóa lớp, bài tập hay điểm.
+        Bạn đăng nhập trực tiếp tại Google Classroom. Khi bấm Kết nối tiện ích trên website, bạn cho
+        phép tiện ích chuyển thông tin tài khoản, lớp, bài tập, danh sách bài nộp và lịch sử tải
+        thuộc tài khoản đang kết nối vào tab website, đồng thời cho phép điều khiển phiên tải. Tiện
+        ích đọc giao diện Classroom/Drive mà tài khoản truy cập được, không dùng Classroom API.
+        Quyền giáo viên được kiểm tra khi quét bài nộp. Ứng dụng không sửa lớp, bài tập hay điểm.
       </p>
       <h2>Lưu trữ và sử dụng</h2>
       <p>
-        Access token và dữ liệu lớp được giữ trong bộ nhớ của tab. Ứng dụng không ghi chúng vào
-        localStorage, cookie hoặc cơ sở dữ liệu riêng, và không gửi dữ liệu lớp tới máy chủ riêng
-        của chủ website. Dữ liệu dùng để hiển thị và tạo báo cáo CSV khi bạn yêu cầu. Đăng xuất,
-        đóng hoặc tải lại tab sẽ xóa phiên trong bộ nhớ; tệp báo cáo đã tải vẫn ở thiết bị của bạn.
+        Website giữ dữ liệu nhận được trong bộ nhớ của tab, không ghi vào localStorage hoặc cookie.
+        Tiện ích lưu tài khoản, lớp/bài tập, phiên tải, cấu hình và lịch sử bằng Chrome Storage
+        local trên thiết bị; quyền kết nối website lưu theo tab/tài liệu trong Chrome Storage
+        session. Ứng dụng không gửi dữ liệu lớp tới GitHub hoặc backend riêng. Dữ liệu dùng để hiển
+        thị, tải tệp và xuất CSV/Excel/nhật ký theo yêu cầu. Tệp và báo cáo đã tải nằm trên thiết
+        bị.
       </p>
       <h2>Dịch vụ Google và GitHub</h2>
       <p>
-        Đăng nhập diễn ra trên Google; website không nhận mật khẩu Google. Trình duyệt kết nối trực
-        tiếp tới Google Identity Services và Google API. GitHub Pages phục vụ tệp website. Các dịch
-        vụ này có chính sách riêng và có thể lưu dữ liệu vận hành theo chính sách của họ. Ứng dụng
-        không tích hợp công cụ quảng cáo hoặc phân tích truy cập riêng.
+        Đăng nhập diễn ra trên Google; ứng dụng không đọc mật khẩu, cookie hay token Google. Trình
+        duyệt mở Classroom/Drive và tải tệp qua giao diện Google. GitHub Pages phục vụ tệp website
+        tĩnh. Các dịch vụ này có chính sách riêng và có thể lưu dữ liệu vận hành theo chính sách của
+        họ. Ứng dụng không tích hợp quảng cáo hoặc công cụ phân tích truy cập riêng.
       </p>
-      <h2>Đăng xuất và thu hồi quyền</h2>
+      <h2>Ngắt kết nối và xóa dữ liệu</h2>
       <p>
-        Đăng xuất xóa phiên website, không đăng xuất Google trên các trang khác. Bạn có thể thu hồi
-        quyền ứng dụng tại
-        <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer"
-          >trang kết nối tài khoản Google</a
-        >. Sau khi phiên hết hạn hoặc quyền bị thu hồi, cần đăng nhập lại để đọc dữ liệu.
+        Ngắt kết nối website xóa dữ liệu hiển thị và thu hồi quyền của tab đó; phản hồi tới muộn bị
+        chặn. Đóng hoặc tải lại website cần bấm kết nối lại. Các thao tác này không đăng xuất
+        Google, không xóa lịch sử tiện ích, không xóa tệp đã tải và không dừng hàng đợi đang chạy.
+        Bấm Dừng nếu muốn ngừng tải. Để xóa dữ liệu tiện ích, mở dashboard bằng biểu tượng tiện ích
+        rồi chọn Cài đặt → Xóa dữ liệu và lịch sử; thao tác này không xóa tệp trên ổ đĩa. Bạn cũng
+        có thể tắt hoặc gỡ tiện ích trong trang quản lý tiện ích của trình duyệt.
       </p>
       <h2>Liên hệ</h2>
       <p>
