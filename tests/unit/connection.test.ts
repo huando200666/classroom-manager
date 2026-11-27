@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChromiumAdapter } from '../../packages/browser-adapter/chromium';
+import { ChromiumAdapter, sameDestination } from '../../packages/browser-adapter/chromium';
 import { connectionError } from '../../packages/shared/connection-errors';
 
 const lost = () => new Error('Could not establish connection. Receiving end does not exist.');
@@ -19,6 +19,87 @@ beforeEach(() => {
   vi.stubGlobal('chrome', {
     tabs: { sendMessage: send, get, query, update },
     scripting: { executeScript: inject },
+  });
+});
+
+describe('chờ đúng trang Classroom khi quét bài nộp', () => {
+  const details = 'https://classroom.google.com/c/COURSE/a/A7/details';
+  const submissions = 'https://classroom.google.com/u/1/c/COURSE/a/A7/submissions';
+  it('chấp nhận URL tài khoản và chuyển hướng trong cùng bài tập', () => {
+    expect(sameDestination(submissions, details)).toBe(true);
+    expect(
+      sameDestination(
+        'https://classroom.google.com/u/0/c/COURSE',
+        'https://classroom.google.com/c/COURSE',
+      ),
+    ).toBe(true);
+  });
+  it('không chấp nhận bài, lớp, tài khoản hoặc sinh viên khác', () => {
+    expect(sameDestination(submissions.replace('/A7/', '/OTHER/'), details)).toBe(false);
+    expect(sameDestination(submissions.replace('/COURSE/', '/OTHER/'), details)).toBe(false);
+    expect(sameDestination(submissions, details.replace('/c/', '/u/0/c/'))).toBe(false);
+    expect(sameDestination(details + '/student/S2', details + '/student/S1')).toBe(false);
+  });
+  it('đọc được tài liệu dù một tài nguyên phụ khiến tab còn loading', async () => {
+    vi.useFakeTimers();
+    get.mockResolvedValue({ id: 42, url: submissions, status: 'loading' });
+    send.mockResolvedValue({ ok: true, data: { url: submissions } });
+    const result = new ChromiumAdapter().ready(42, details).then(
+      () => 'ready',
+      (e) => e.message,
+    );
+    await vi.advanceTimersByTimeAsync(23000);
+    expect(await result).toBe('ready');
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+  it('hiển thị tab trước khi chờ và không tải lại tab vừa tạo cùng URL', async () => {
+    get.mockResolvedValue({ id: 42, url: details, status: 'loading', active: false, windowId: 1 });
+    query.mockResolvedValueOnce([{ id: 7 }]).mockResolvedValueOnce([{ id: 42 }]);
+    send.mockImplementation(async () => {
+      expect(update).toHaveBeenCalledWith(42, { active: true });
+      return { ok: true, data: { url: details } };
+    });
+    const browser = new ChromiumAdapter();
+    vi.useFakeTimers();
+    const result = browser.navigate(42, details).then(
+      () => 'ready',
+      (e) => e.message,
+    );
+    await vi.advanceTimersByTimeAsync(23000);
+    expect(await result).toBe('ready');
+    expect(update.mock.calls).toEqual([
+      [42, { active: true }],
+      [7, { active: true }],
+    ]);
+  });
+  it('không dùng ping của tài liệu cũ khi đang chuyển trang', async () => {
+    vi.useFakeTimers();
+    get.mockResolvedValue({ id: 42, url: details, status: 'loading' });
+    send
+      .mockResolvedValueOnce({ ok: true, data: { url: 'https://classroom.google.com/c/OTHER' } })
+      .mockResolvedValue({ ok: true, data: { url: details } });
+    const result = new ChromiumAdapter().ready(42, details).then(() => 'ready');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await result).toBe('ready');
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+  it('giới hạn cả ping bị treo trong thời gian chờ 22 giây', async () => {
+    vi.useFakeTimers();
+    get.mockResolvedValue({ id: 42, url: details, status: 'complete' });
+    send.mockImplementation(() => new Promise(() => {}));
+    const result = new ChromiumAdapter().ready(42, details).catch((e) => e.message);
+    let finished = false;
+    void result.then(() => {
+      finished = true;
+    });
+    await vi.advanceTimersByTimeAsync(22500);
+    expect(finished).toBe(true);
+    expect(await result).toContain('22 giây');
+  });
+  it('báo lỗi quyền truy cập từ trang ngay, không đổi thành timeout', async () => {
+    get.mockResolvedValue({ id: 42, url: details, status: 'complete' });
+    send.mockResolvedValue({ ok: false, error: 'Google từ chối quyền truy cập.' });
+    await expect(new ChromiumAdapter().ready(42, details)).rejects.toThrow('Google từ chối');
   });
 });
 

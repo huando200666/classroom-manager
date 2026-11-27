@@ -23,7 +23,22 @@ export function sameDestination(actual: string | undefined, expected: string) {
   try {
     const a = new URL(actual);
     const b = new URL(expected);
-    return a.origin === b.origin && a.pathname.replace(/\/$/, '') === b.pathname.replace(/\/$/, '');
+    if (a.origin !== b.origin) return false;
+    let actualPath = a.pathname.replace(/\/$/, '');
+    let expectedPath = b.pathname.replace(/\/$/, '');
+    if (a.origin === 'https://classroom.google.com') {
+      const account = (u: URL) =>
+        u.pathname.match(/^\/u\/(\d+)(?:\/|$)/)?.[1] || u.searchParams.get('authuser');
+      if (account(a) && account(b) && account(a) !== account(b)) return false;
+      actualPath = actualPath.replace(/^\/u\/\d+(?=\/|$)/, '');
+      expectedPath = expectedPath.replace(/^\/u\/\d+(?=\/|$)/, '');
+      // Classroom có thể đổi chế độ xem theo vai trò. Chỉ coi hai trang tổng
+      // quan của cùng lớp/bài tập là tương đương; không gộp trang từng học viên.
+      const overview = /^(\/c\/[^/]+\/a\/[^/]+)\/(?:details|submissions)$/;
+      actualPath = actualPath.replace(overview, '$1');
+      expectedPath = expectedPath.replace(overview, '$1');
+    }
+    return actualPath === expectedPath;
   } catch {
     return false;
   }
@@ -80,8 +95,16 @@ export class ChromiumAdapter implements BrowserAdapter {
   }
   async navigate(tabId: number, url: string) {
     if (!allowedNavigation(url)) throw new Error('Địa chỉ ngoài phạm vi Classroom/Drive.');
-    await retry(() => chrome.tabs.update(tabId, { url }), { retryIf: tabLocked });
-    await this.ready(tabId, url);
+    const navigate = async () => {
+      const tab = await chrome.tabs.get(tabId);
+      // createWorkTab đã bắt đầu mở URL. Không khởi động lại lần tải đó.
+      if (tab.url !== url && tab.pendingUrl !== url)
+        await retry(() => chrome.tabs.update(tabId, { url }), { retryIf: tabLocked });
+      await this.ready(tabId, url);
+    };
+    if (new URL(url).hostname === 'classroom.google.com')
+      await this.withVisibleTab(tabId, navigate);
+    else await navigate();
   }
   async ready(tabId: number, url?: string) {
     const started = Date.now();
@@ -93,33 +116,44 @@ export class ChromiumAdapter implements BrowserAdapter {
           'Google yêu cầu đăng nhập/xác nhận bảo mật. Hoàn thành trong tab Google rồi thử lại.',
         );
       }
-      if (tab.status === 'complete' && (!url || sameDestination(tab.url, url))) {
+      if (!tab.pendingUrl && (!url || sameDestination(tab.url, url))) {
         try {
-          await this.dom(tabId, 'ping');
-          return;
+          const remaining = 22000 - (Date.now() - started);
+          if (remaining <= 0) break;
+          // Tài liệu có thể đọc được trước khi tài nguyên phụ tải xong.
+          // Ping tài liệu thật thay vì chỉ dựa vào trạng thái complete của tab.
+          const actual = await timeout(
+            this.dom<{ url: string }>(tabId, 'ping'),
+            Math.min(1500, remaining),
+            'Chờ tài liệu phản hồi.',
+          );
+          if (actual.url && (!url || sameDestination(actual.url, url))) return;
         } catch (error) {
           if (/Google từ chối|Cần đăng nhập|xác nhận bảo mật/.test(String(error))) throw error;
         }
       }
-      await delay(250);
+      await delay(Math.min(250, Math.max(0, 22000 - (Date.now() - started))));
     }
     throw new Error(
-      'Tab chưa sẵn sàng sau 22 giây. Kiểm tra kết nối, đăng nhập hoặc quyền truy cập.',
+      'Tab chưa sẵn sàng sau 22 giây. Mở tab bài tập vừa được tạo, kiểm tra trang đã tải và đúng tài khoản/quyền truy cập rồi thử lại.',
     );
   }
   async dom<T = any>(tabId: number, command: string, args: object = {}): Promise<T> {
-    if (!['courses', 'assignments', 'students'].includes(command))
+    if (!['courses', 'assignments', 'students', 'studentWork'].includes(command))
       return this.requestDom<T>(tabId, command, args);
     const tab = await chrome.tabs.get(tabId);
     if (!tab.url?.startsWith('https://classroom.google.com/'))
       throw new Error('Tab không còn ở Google Classroom. Mở Classroom rồi kết nối lại.');
-    if (tab.active) return this.requestDom<T>(tabId, command, args);
-
+    return this.withVisibleTab(tabId, () => this.requestDom<T>(tabId, command, args));
+  }
+  private async withVisibleTab<T>(tabId: number, work: () => Promise<T>): Promise<T> {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab.active) return work();
     const [previous] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
     // Timer trong trang nền có thể bị Chrome trì hoãn. Đọc danh sách khi tab hiển thị.
     await retry(() => chrome.tabs.update(tabId, { active: true }), { retryIf: tabLocked });
     try {
-      return await this.requestDom<T>(tabId, command, args);
+      return await work();
     } finally {
       try {
         const [current] = await chrome.tabs.query({ active: true, windowId: tab.windowId });

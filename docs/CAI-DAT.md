@@ -4,7 +4,7 @@ Từ bản 1.2.0, website sử dụng tiện ích Chrome/Edge để quét giao d
 
 ## Cài lần đầu
 
-1. Tải và giải nén [Classroom-Manager-1.2.0.zip](https://github.com/huando200666/classroom-manager/releases/download/v1.2.0/Classroom-Manager-1.2.0.zip) vào vị trí cố định, ví dụ `D:\Classroom-Manager`. Không xóa hay chuyển thư mục sau khi cài.
+1. Tải và giải nén [Classroom-Manager-1.2.1.zip](https://github.com/huando200666/classroom-manager/releases/download/v1.2.1/Classroom-Manager-1.2.1.zip) vào vị trí cố định, ví dụ `D:\Classroom-Manager`. Không xóa hay chuyển thư mục sau khi cài.
 2. Chrome: nhập `chrome://extensions`. Edge: nhập `edge://extensions`.
 3. Bật **Developer mode / Chế độ nhà phát triển**.
 4. Chọn **Load unpacked / Tải tiện ích đã giải nén**.
@@ -15,7 +15,7 @@ Yêu cầu trình duyệt Chromium 120 trở lên. Không cần cài Python, t�
 
 ## Kết nối đúng tài khoản
 
-Nếu đang dùng bản cũ, dừng phiên tải, tải 1.2.0 và giải nén đè vào đúng thư mục đã cài, vào trang quản lý tiện ích nhấn **Tải lại / Reload**. Nếu trình duyệt hỏi quyền truy cập website dự án, cho phép để dùng cầu nối. Nhấn F5 tại website và Classroom, kiểm tra phiên bản nhận diện là **1.2.0**. Chỉ mở lại website không cập nhật tiện ích đã cài. Không gỡ tiện ích hoặc chuyển thư mục để giữ dữ liệu cũ.
+Nếu đang dùng bản cũ, dừng phiên tải, tải 1.2.1 và giải nén đè vào đúng thư mục đã cài, vào trang quản lý tiện ích nhấn **Tải lại / Reload**. Nếu trình duyệt hỏi quyền truy cập website dự án, cho phép để dùng cầu nối. Nhấn F5 tại website và Classroom, kiểm tra phiên bản nhận diện là **1.2.1**. Chỉ mở lại website không cập nhật tiện ích đã cài. Không gỡ tiện ích hoặc chuyển thư mục để giữ dữ liệu cũ.
 
 Từ 1.0.3, tiện ích tạm hiển thị tab Classroom khi đọc danh sách lớp, bài tập hoặc bài nộp để tránh bộ đọc bị trì hoãn ở tab nền. Sau khi đọc xong sẽ quay về tab trước đó nếu bạn chưa tự chuyển sang tab khác. Có thể dùng cách tạm thời trên bản cũ: bấm Kết nối rồi chuyển ngay sang Classroom trong lúc đọc.
 
@@ -57,7 +57,8 @@ Tên lớp thực tế được làm sạch ký tự không hợp lệ. Mỗi ZI
 
 ## Khi gặp lỗi
 
-- **Chưa tìm thấy tiện ích hỗ trợ website:** cập nhật tiện ích lên 1.2.0, bấm Reload tại trang extensions, kiểm tra tiện ích được phép truy cập `huando200666.github.io`, rồi nhấn F5 trên website. Dùng cùng hồ sơ trình duyệt với Classroom; cửa sổ ẩn danh/hồ sơ khác không dùng chung tiện ích hoặc phiên đăng nhập.
+- **Chưa tìm thấy tiện ích hỗ trợ website:** cập nhật tiện ích lên 1.2.1, bấm Reload tại trang extensions, kiểm tra tiện ích được phép truy cập `huando200666.github.io`, rồi nhấn F5 trên website. Dùng cùng hồ sơ trình duyệt với Classroom; cửa sổ ẩn danh/hồ sơ khác không dùng chung tiện ích hoặc phiên đăng nhập.
+- **Tab chưa sẵn sàng sau 22 giây khi đọc/quét bài tập:** bản 1.2.1 sửa việc chờ tab nền, chờ tài nguyên phụ và URL chuyển hướng của cùng bài tập. Cập nhật tiện ích, Reload rồi F5 cả website/Classroom. Nếu còn lỗi, mở tab bài tập do tiện ích tạo để xem nội dung: hoàn tất đăng nhập nếu Google yêu cầu, kiểm tra đúng tài khoản và quyền giáo viên. Nếu bài tập đã hiện nhưng không có mục Bài tập của học viên, tài khoản có thể là học viên hoặc adapter chưa nhận diện được giao diện đó.
 - **Kết nối website đã ngắt hoặc tài khoản đã đổi:** bấm Kết nối tiện ích lại. Nếu còn phiên tải cũ đang chạy/tạm dừng, mở dashboard bằng biểu tượng tiện ích để quản lý hoặc dừng trước khi đổi tài khoản.
 - **Could not establish connection / Receiving end does not exist:** với bản cũ, nhấn F5 ở tab Classroom. Để dùng bản sửa 1.0.1, vào trang extensions, nhấn Tải lại / Reload ở Classroom Manager, đóng dashboard cũ và mở lại bằng biểu tượng tiện ích. Kiểm tra Chi tiết → Quyền truy cập trang web cho phép Classroom/Drive.
 - **Thao tác quá thời gian chờ khi Kết nối:** bản 1.0.1 có thời hạn nhận kết quả ngắn hơn thời gian chờ/thu thập danh sách. Cập nhật 1.0.2. Bản mới chờ tối đa 45 giây cho danh sách lớp/bài tập/bài nộp và báo rõ bước bị chậm. Nếu vẫn lỗi, mở trang chủ Classroom, chờ tải xong rồi thử lại; giao diện Google thực tế có thể chưa được adapter hỗ trợ.

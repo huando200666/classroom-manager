@@ -1,4 +1,4 @@
-# Báo cáo kiểm thử 1.2.0
+# Báo cáo kiểm thử 1.2.1
 
 Ngày 27/11/2026 (Asia/Bangkok).
 
@@ -8,8 +8,8 @@ Vitest/jsdom kiểm tra parser, adapter, hàng đợi, lưu trữ và chính sá
 
 | Kiểm tra                          | Kết quả                                                                                                   |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Unit/integration                  | **100/100 đạt**, 7 tệp kiểm thử                                                                           |
-| Playwright E2E                    | **7/7 đạt**, 0 unexpected/flaky/skipped                                                                   |
+| Unit/integration                  | **107/107 đạt**, 7 tệp kiểm thử                                                                           |
+| Playwright E2E                    | **8/8 đạt**, 0 unexpected/flaky/skipped                                                                   |
 | Desktop và 390px                  | Không lỗi JavaScript hoặc tràn ngang toàn trang                                                           |
 | Website nhận dữ liệu qua tiện ích | Đọc lớp, bài tập và 5 học viên (3 đã nộp, 2 chưa nộp); không gọi Classroom API                            |
 | Quét danh sách lớn                | 73 sinh viên, đúng 55 đã nộp và 18 chưa nộp                                                               |
@@ -29,6 +29,12 @@ Không tự động đăng nhập Google, không dùng dữ liệu học viên t
 - Ngắt kết nối xóa giao diện và quyền của website, giữ nguyên lịch sử tiện ích. Tải lại trang không tự cho phép đọc dữ liệu.
 - Giữ chậm một yêu cầu đọc bài tập, ngắt kết nối rồi mới trả DOM: background hoàn tất nhưng tên bài riêng tư tới muộn không xuất hiện trong thông điệp/trạng thái website.
 - Grant dùng storage session, tồn tại qua worker restart, không dùng lại được bởi tab/tài liệu khác; nonce cũ không ghi đè grant mới sau thu hồi/cấp lại.
+
+## Hồi quy lỗi chờ tab 22 giây
+
+Thêm 7 unit test cho URL tài khoản/chuyển hướng trong cùng bài tập, từ chối sai lớp/bài/tài khoản/học viên, tài liệu còn loading nhưng phản hồi được, hiển thị tab trước khi chờ, không tải lại URL vừa mở, không nhận ping của tài liệu cũ, giới hạn ping treo và giữ lỗi quyền truy cập. Khi chạy trên mã cũ, 5 ca thất bại; sau sửa, cả 7 ca đạt.
+
+E2E mới chuyển hướng từ URL lớp/bài tập sang `/u/1/...`, từ details sang submissions và giữ một ảnh chưa phản hồi để tab luôn ở trạng thái loading. Website vẫn đọc được 5 học viên, không có lỗi và kiểm tra Chrome API xác nhận tab còn loading. Đây là dữ liệu mô phỏng, chưa xác nhận nguyên nhân trên tài khoản thật của người dùng.
 
 ## Hồi quy chức năng tiện ích
 

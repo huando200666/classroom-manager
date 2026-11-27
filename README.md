@@ -3,12 +3,12 @@
 Website tiếng Việt để xem lớp, bài tập, quét bài nộp và điều khiển tải tệp qua **tiện ích Chrome/Edge đã cài**. Đăng nhập tại Google Classroom như bình thường; dữ liệu được đọc từ giao diện Classroom rồi hiển thị trực tiếp trên website. Không cần Google Cloud, OAuth Client ID, Classroom API hoặc tải dữ liệu về để nhập lại.
 
 - [Mở website](https://huando200666.github.io/classroom-manager/)
-- [Tải tiện ích 1.2.0](https://github.com/huando200666/classroom-manager/releases/download/v1.2.0/Classroom-Manager-1.2.0.zip)
+- [Tải tiện ích 1.2.1](https://github.com/huando200666/classroom-manager/releases/download/v1.2.1/Classroom-Manager-1.2.1.zip)
 - [Mã nguồn và các bản phát hành](https://github.com/huando200666/classroom-manager/releases)
 
 ## Sử dụng
 
-1. Nếu đã cài bản cũ: dừng phiên tải, giải nén bản 1.2.0 **đè vào đúng thư mục tiện ích cũ**, vào `chrome://extensions` hoặc `edge://extensions` và bấm **Tải lại / Reload**. Giữ nguyên thư mục để giữ định danh và dữ liệu tiện ích. Cài lần đầu: bật Developer mode, chọn Load unpacked và thư mục `Classroom-Manager` có `manifest.json`.
+1. Nếu đã cài bản cũ: dừng phiên tải, giải nén bản 1.2.1 **đè vào đúng thư mục tiện ích cũ**, vào `chrome://extensions` hoặc `edge://extensions` và bấm **Tải lại / Reload**. Giữ nguyên thư mục để giữ định danh và dữ liệu tiện ích. Cài lần đầu: bật Developer mode, chọn Load unpacked và thư mục `Classroom-Manager` có `manifest.json`.
 2. Mở [Google Classroom](https://classroom.google.com/), đăng nhập đúng tài khoản trong cùng hồ sơ Chrome/Edge và về trang danh sách lớp.
 3. Mở hoặc nhấn F5 tại [website](https://huando200666.github.io/classroom-manager/), bấm **Kết nối tiện ích**. Một tab Classroom sẽ được kết nối tự động; nếu có nhiều tab, chọn tab mong muốn rồi bấm Kết nối.
 4. Chọn lớp → bài tập → **Quét bài nộp**. Kiểm tra số lượng, trạng thái và cảnh báo trước khi tải.
@@ -73,4 +73,4 @@ public/                    Trang quyền riêng tư
 - [Cài đặt và cập nhật](docs/CAI-DAT.md)
 - [Kiến trúc](docs/KIEN-TRUC.md)
 - [Báo cáo kiểm thử](docs/KIEM-THU.md)
-- [Thay đổi 1.2.0](docs/PHAT-HANH-1.2.0.md)
+- [Thay đổi 1.2.1](docs/PHAT-HANH-1.2.1.md)

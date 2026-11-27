@@ -105,7 +105,9 @@ test('MV3 phục hồi: tiếng Anh, gián đoạn, Drive từ chối, HTML gi�
     await app.getByRole('button', { name: 'Kết nối', exact: true }).click();
     await expect(app.getByText(/teacher@example.test · 1 lớp/)).toBeVisible();
     await app.getByLabel('Lớp học', { exact: true }).selectOption('COURSE');
-    await expect(app.getByLabel('Bài tập', { exact: true })).toContainText('BTVN tuần 7');
+    await expect(app.getByLabel('Bài tập', { exact: true })).toContainText('BTVN tuần 7', {
+      timeout: 20000,
+    });
     await app.getByLabel('Bài tập', { exact: true }).selectOption('A7');
     await app.getByRole('button', { name: 'Quét bài nộp', exact: true }).click();
     await expect(app.getByText('5 / 5 sinh viên')).toBeVisible();

@@ -30,6 +30,8 @@ Quyền cấp sau thao tác bấm trực tiếp, theo tab/document và mất khi
 
 ## Cần kiểm chứng trên Classroom thật
 
+Bản 1.2.1 sửa bộ chờ tab: kích hoạt Classroom trước khi chờ, chấp nhận phản hồi tài liệu đúng bài dù tài nguyên phụ còn loading, nhận diện thêm phần tài khoản `/u/N/` và chuyển chế độ details/submissions cùng bài tập. Unit/E2E tái hiện các điều kiện này; chưa có DOM/tab thật để xác nhận chúng là nguyên nhân duy nhất của thông báo 22 giây người dùng gặp. Các kiểm tra quyền/tài khoản và giới hạn DOM vẫn giữ nguyên.
+
 Bản 1.0.2 sửa thời hạn nhận kết quả quá ngắn khi đọc danh sách và bổ sung lỗi theo từng thao tác. Việc sửa timeout không thay thế kiểm chứng selector và cấu trúc trang Classroom thực tế.
 
 Bản 1.0.3 tạm hiển thị Classroom khi đọc danh sách lớp/bài tập/bài nộp. Người dùng đã xác nhận trên trang của họ rằng chuyển Classroom ra trước giúp đọc được lớp. Đây là bằng chứng cho điều kiện kích hoạt lỗi đang xử lý, không phải xác minh toàn bộ luồng tải trên dữ liệu thật.

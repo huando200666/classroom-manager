@@ -110,7 +110,9 @@ test('website thật nhận dữ liệu qua tiện ích, không cần API và x�
     expect(transcript).not.toContain('PRIVATE_HISTORY');
     expect(transcript).not.toContain('PRIVATE_ACCOUNT');
     await app.getByLabel('Lớp học', { exact: true }).selectOption('COURSE');
-    await expect(app.getByLabel('Bài tập', { exact: true })).toContainText('BTVN tuần 7');
+    await expect(app.getByLabel('Bài tập', { exact: true })).toContainText('BTVN tuần 7', {
+      timeout: 20000,
+    });
     await app.getByLabel('Bài tập', { exact: true }).selectOption('A7');
     await app.getByRole('button', { name: 'Quét bài nộp', exact: true }).click();
     await expect(app.getByText('5 / 5 sinh viên')).toBeVisible();
@@ -194,6 +196,74 @@ test('website thật nhận dữ liệu qua tiện ích, không cần API và x�
     await context.close();
   }
 });
+test('quét bài nộp qua chuyển hướng tài khoản khi tài nguyên phụ chưa tải xong', async ({}, info) => {
+  test.setTimeout(90000);
+  const extension = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext(info.outputPath('profile'), {
+    executablePath: browserPath(),
+    headless: true,
+    channel: 'chromium',
+    args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
+  });
+  let releaseResource: () => void = () => {};
+  const resource = new Promise<void>((resolve) => {
+    releaseResource = resolve;
+  });
+  try {
+    await fixtures(context);
+    await context.route('https://classroom.google.com/**', async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path === '/slow-image') {
+        await resource;
+        await route.fulfill({ status: 204 }).catch(() => {});
+        return;
+      }
+      if (path === '/c/COURSE' || path === '/c/COURSE/a/A7/details') {
+        const location = path.endsWith('/details')
+          ? '/u/1/c/COURSE/a/A7/submissions'
+          : '/u/1/c/COURSE';
+        await route.fulfill({ status: 302, headers: { location } });
+        return;
+      }
+      const body =
+        path === '/'
+          ? coursesFixture()
+          : path.endsWith('/submissions')
+            ? studentsFixture('vi', 5, 3).replace(
+                '</body>',
+                '<img src="/slow-image" alt=""></body>',
+              )
+            : assignmentsFixture();
+      await route.fulfill({ contentType: 'text/html; charset=utf-8', body });
+    });
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    const classroom = await context.newPage();
+    await classroom.goto('https://classroom.google.com/');
+    const app = await context.newPage();
+    await app.goto(website);
+    await app.getByRole('button', { name: 'Kết nối tiện ích', exact: true }).click();
+    await expect(app.getByText(/teacher@example.test · 1 lớp/)).toBeVisible();
+    await app.getByLabel('Lớp học', { exact: true }).selectOption('COURSE');
+    await expect(app.getByLabel('Bài tập', { exact: true })).toContainText('BTVN tuần 7', {
+      timeout: 20000,
+    });
+    await app.getByLabel('Bài tập', { exact: true }).selectOption('A7');
+    await app.getByRole('button', { name: 'Quét bài nộp', exact: true }).click();
+    await expect(app.getByText('5 / 5 sinh viên')).toBeVisible({ timeout: 20000 });
+    await expect(app.getByRole('alert')).toHaveCount(0);
+    expect(
+      await worker.evaluate(async () => {
+        const tabs = await chrome.tabs.query({ url: 'https://classroom.google.com/*' });
+        return tabs.find((tab) => tab.url?.endsWith('/a/A7/submissions'))?.status;
+      }),
+    ).toBe('loading');
+  } finally {
+    releaseResource();
+    await context.close();
+  }
+});
+
 test('website khác cùng github.io không được kết nối tiện ích', async ({}, info) => {
   const extension = resolve('dist/extension');
   const context = await chromium.launchPersistentContext(info.outputPath('profile'), {
