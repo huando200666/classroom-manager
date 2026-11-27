@@ -14,6 +14,7 @@ import {
   studentId,
 } from '../fixtures/classroom';
 import type { AppState } from '../../packages/shared/types';
+import { mockGoogleWeb } from '../fixtures/google-web';
 
 function browserPath() {
   if (process.env.CM_CHROMIUM_PATH) return process.env.CM_CHROMIUM_PATH;
@@ -38,33 +39,21 @@ function browserPath() {
 test('giao diện thật, trạng thái trống, điều hướng và responsive', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  await mockGoogleWeb(page);
   await page.goto('http://127.0.0.1:5173');
   await expect(
-    page.getByRole('heading', { name: 'Quản lý bài nộp, nhẹ nhàng hơn.' }),
+    page.getByRole('heading', { name: 'Lớp học của bạn. Kết nối ngay trên web.' }),
   ).toBeVisible();
-  await expect(page.getByText('Đây là giao diện web xem trước')).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Đăng nhập bằng Google', exact: true }),
+  ).toBeEnabled();
   await expect(page.getByRole('button', { name: 'Tải tất cả bài nộp', exact: true })).toHaveCount(
     0,
   );
   await page.screenshot({ path: 'docs/dashboard-desktop.png', fullPage: true });
-  await page.getByRole('navigation').getByRole('button', { name: 'Cài đặt', exact: true }).click();
-  await expect(page.getByText('Cấu hình tải bài nộp')).toBeVisible();
-  await page.getByRole('button', { name: 'Xóa dữ liệu và lịch sử' }).click();
-  await expect(page.getByRole('button', { name: 'Xác nhận xóa dữ liệu' })).toBeVisible();
-  await page.getByRole('button', { name: 'Hủy', exact: true }).click();
-  await page
-    .getByRole('navigation')
-    .getByRole('button', { name: 'Chấm bài Python', exact: true })
-    .click();
-  await expect(page.getByText('Không gian chấm bài Python')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Mở điều hướng' }).click();
-  await page
-    .getByRole('navigation')
-    .getByRole('button', { name: 'Tổng quan', exact: true })
-    .click();
   await expect(
-    page.getByRole('heading', { name: 'Quản lý bài nộp, nhẹ nhàng hơn.' }),
+    page.getByRole('heading', { name: 'Lớp học của bạn. Kết nối ngay trên web.' }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'docs/dashboard-mobile.png', fullPage: true });

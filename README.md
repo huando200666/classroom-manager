@@ -1,8 +1,8 @@
 # Classroom Manager
 
-Ứng dụng tiếng Việt để đọc lớp, bài tập và bài nộp từ **giao diện Google Classroom trong hồ sơ Chrome/Edge hiện tại**, sau đó yêu cầu Google Drive tải từng tệp gốc. Giao diện React được đóng gói trong tiện ích Manifest V3; người dùng cuối không cần Node, Python, localhost, API key hoặc Google Cloud Project.
+Website tiếng Việt để **đăng nhập Google và xem dữ liệu Classroom trực tiếp trên web**: lớp học, bài tập, bài nộp, trạng thái và liên kết tệp. Người dùng không cần cài tiện ích hoặc tải dữ liệu về rồi nhập lại. Chủ website cấu hình một Google OAuth Client ID theo [hướng dẫn](docs/GOOGLE-OAUTH.md).
 
-**Trạng thái:** MVP có mã nguồn, bản build và kiểm thử trên trang mô phỏng. Chưa kiểm chứng adapter trên một tài khoản Classroom thực tế. Không bảo đảm mọi phiên bản DOM của Google đều được nhận diện. Khi không xác minh được dữ liệu, tiện ích báo lỗi và không tải dựa trên suy đoán.
+**Trạng thái 1.1.0:** có luồng Google OAuth và Classroom REST API; 107/107 unit/integration và 10/10 E2E đã đạt với OAuth/API mô phỏng. Đăng nhập và đối chiếu dữ liệu Google thật cần OAuth Client ID hợp lệ, bật Classroom API và tài khoản được cho phép. Khi chưa có Client ID, nút đăng nhập bị khóa và website hiển thị hướng dẫn cấu hình.
 
 ## Website và mã nguồn
 
@@ -10,7 +10,9 @@
 - Mã nguồn: https://github.com/huando200666/classroom-manager
 - Tải bản cài đặt và mã nguồn ZIP: https://github.com/huando200666/classroom-manager/releases/latest
 
-GitHub Pages phục vụ giao diện web xem trước và liên kết tải tiện ích. Bản này chưa có OAuth/backend để kết nối Classroom trực tiếp từ website. Muốn thao tác với lớp học, dùng tiện ích Chrome/Edge; adapter vẫn cần kiểm chứng trên Classroom thật.
+GitHub Pages phục vụ website đăng nhập Google qua popup. Sau đăng nhập, lớp đang hoạt động được tải tự động; chọn lớp để tải bài tập và xem bài nộp. Học viên chỉ được yêu cầu bài của mình, giáo viên xem dữ liệu được phép trong lớp mình dạy. Có lọc trạng thái, mở tệp trên Google và xuất CSV. Token/dữ liệu chỉ ở RAM; đăng xuất hoặc tải lại trang xóa phiên. Website chưa tải ZIP hàng loạt hoặc chấm Python.
+
+Chủ website đặt repository variable **GOOGLE_CLIENT_ID** trong GitHub Actions rồi triển khai lại. Client ID là mã công khai; không đưa Client Secret vào frontend. Chi tiết tại [GOOGLE-OAUTH.md](docs/GOOGLE-OAUTH.md). Không cần API key hoặc backend để dùng luồng đọc trực tiếp này.
 
 Mỗi lần đẩy mã lên nhánh `main`, GitHub Actions chạy unit/integration tests, build và triển khai website. Thư mục build web là `dist/site`, tách riêng bản tiện ích `dist/extension`. `node_modules`, cache và hồ sơ trình duyệt kiểm thử không đưa vào kho; có thể cài lại thư viện bằng `npm ci`.
 
@@ -21,9 +23,11 @@ npm run preview:web
 
 Đường dẫn Vite của bản web được cấu hình cho `/classroom-manager/`. Nếu đổi tên repository, cập nhật `base` của mode `web` trong `vite.config.ts`.
 
-## Dùng bản đã build
+## Tiện ích Chrome/Edge tùy chọn
 
-1. Giải nén `release/Classroom-Manager-1.0.3.zip`.
+Phần bên dưới là luồng cũ để tải tệp hàng loạt từ DOM. Website đăng nhập Google không yêu cầu các bước cài tiện ích này. Adapter DOM vẫn cần kiểm chứng thêm trên Classroom thật.
+
+1. Giải nén `release/Classroom-Manager-1.1.0.zip`.
 2. Mở `chrome://extensions` hoặc `edge://extensions`.
 3. Bật **Chế độ nhà phát triển** → **Tải tiện ích đã giải nén / Load unpacked**.
 4. Chọn thư mục **Classroom-Manager** có tệp `manifest.json`.
@@ -31,11 +35,11 @@ npm run preview:web
 6. Bấm biểu tượng Classroom Manager → làm mới tab → chọn tab → **Kết nối**.
 7. Chọn lớp, bài tập cụ thể → **Quét bài nộp** → kiểm tra số lượng/cảnh báo → **Tải tất cả bài nộp**.
 
-Cũng có thể cài trực tiếp thư mục `dist/extension`. Không mở `index.html` bằng File Explorer để sử dụng phiên Classroom. Bản web độc lập chỉ cho xem giao diện và hướng dẫn cài tiện ích.
+Cũng có thể cài trực tiếp thư mục `dist/extension`. Không mở `index.html` bằng File Explorer để sử dụng phiên Classroom. Website và tiện ích có hai tầng kết nối riêng: Google OAuth/API và Chrome runtime/DOM.
 
 ![Giao diện dashboard](docs/dashboard-desktop.png)
 
-## Chức năng MVP
+## Chức năng tiện ích DOM
 
 - Chọn tab Classroom, đọc tài khoản đang hoạt động, danh sách lớp và bài tập từ DOM.
 - Nhận diện tuần 1–15; bài ngoài tuần được chọn trực tiếp theo định danh, không tự chọn khi trùng tên.
@@ -71,6 +75,7 @@ apps/web/                   React + TypeScript, CSS + Tailwind, Lucide
 apps/extension/             manifest, content script, service worker
 packages/browser-adapter/   điều hướng, timeout, retry khóa tab
 packages/classroom-adapter/ DOM, account, course, assignment, student, attachment
+packages/google-classroom/ Classroom REST API, phân trang, vai trò, dữ liệu bài nộp
 packages/drive-adapter/     tên tệp xem trước, nút tải Drive và kiểm tra mơ hồ
 packages/submission-parser/ trạng thái, tuần, phần mở rộng, chữ ký ZIP
 packages/download-manager/ hàng đợi, nhận dạng lượt tải, lịch sử
@@ -81,14 +86,17 @@ tests/                     unit, integration, e2e và fixtures
 scripts/                   build và đóng gói ZIP
 docs/                      cài đặt, kiến trúc, kiểm thử, giới hạn
 dist/extension/            bản cài được bằng Load unpacked
+dist/site/                 website GitHub Pages
+public/                    trang quyền riêng tư của website
 release/                   ZIP bản cài và mã nguồn
 ```
 
 ## Tài liệu
 
 - [Cài đặt, sử dụng và cập nhật](docs/CAI-DAT.md)
+- [Đăng nhập Google trên website](docs/GOOGLE-OAUTH.md)
 - [Kiến trúc và quyền riêng tư](docs/KIEN-TRUC.md)
 - [Báo cáo kiểm thử](docs/KIEM-THU.md)
 - [Lỗi đã xử lý và giới hạn](docs/GIOI-HAN.md)
 
-Không gửi dữ liệu sinh viên lên máy chủ; không đọc mật khẩu, cookie, token; không thay đổi điểm, trả bài hoặc gửi thông báo. Chỉ thao tác với dữ liệu giảng viên đang được phép xem.
+Website nhận access token do Google cấp sau khi người dùng đồng ý, giữ trong RAM và gọi Google API trực tiếp; không đọc mật khẩu/cookie Google hoặc gửi dữ liệu lớp đến backend riêng. Tiện ích DOM không đọc token. Không thay đổi điểm, trả bài hoặc gửi thông báo; chỉ xem dữ liệu tài khoản được phép truy cập.

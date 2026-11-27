@@ -1,8 +1,10 @@
 # Cài đặt trên Chrome và Microsoft Edge
 
+Tài liệu này dành cho tiện ích DOM tùy chọn. Với website 1.1.0, người dùng đăng nhập Google trực tiếp và không cần cài tiện ích; xem [hướng dẫn OAuth](GOOGLE-OAUTH.md).
+
 ## Cài lần đầu
 
-1. Tải và giải nén `Classroom-Manager-1.0.3.zip` vào vị trí cố định, ví dụ `D:\Classroom-Manager`. Không xóa hay chuyển thư mục sau khi cài.
+1. Tải và giải nén `Classroom-Manager-1.1.0.zip` vào vị trí cố định, ví dụ `D:\Classroom-Manager`. Không xóa hay chuyển thư mục sau khi cài.
 2. Chrome: nhập `chrome://extensions`. Edge: nhập `edge://extensions`.
 3. Bật **Developer mode / Chế độ nhà phát triển**.
 4. Chọn **Load unpacked / Tải tiện ích đã giải nén**.

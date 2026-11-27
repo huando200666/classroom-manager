@@ -1,18 +1,20 @@
 # Báo cáo kiểm thử
 
-Ngày kiểm tra gần nhất: 26/11/2026 (Asia/Bangkok).
+Rà soát bản 1.1.0 ngày 26–27/11/2026 (Asia/Bangkok).
 
 ## Phạm vi
 
 Kiểm thử unit/integration bằng Vitest + jsdom; E2E giao diện và tiện ích MV3 bằng Playwright + Chromium. Các trang Classroom/Drive trong E2E được intercept thành fixture có quyền sử dụng, không kết nối dữ liệu sinh viên thực và không đăng nhập Google tự động.
 
+Luồng website mới kiểm thử Google Identity Services và Google REST API bằng response mô phỏng. Kiểm tra đăng nhập, vai trò, phân trang, xuất CSV, đăng xuất, lỗi 401/403 và hủy yêu cầu cũ. Chưa có OAuth Client ID thật nên chưa xác minh đăng nhập Google hoặc dữ liệu lớp thật.
+
 ## Kết quả cuối cùng
 
 | Kiểm tra                                     | Kết quả                                                                        |
 | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| TypeScript strict và build production        | Đạt, tạo `dist/extension`                                                      |
-| Vitest unit/integration                      | **91/91 đạt**, 6 tệp kiểm thử, 5,85 giây cho bản 1.0.3                         |
-| Playwright E2E                               | **5/5 đạt**, tổng 2,3 phút trên bản build 1.0.3                                |
+| TypeScript strict và build production        | Đạt, tạo `dist/site` và `dist/extension`                                       |
+| Vitest unit/integration                      | **107/107 đạt**, 7 tệp kiểm thử cho bản 1.1.0                                  |
+| Playwright E2E                               | **10/10 đạt**, báo cáo ghi 0 unexpected/flaky/skipped                          |
 | Giao diện desktop và 390px                   | Đạt, không lỗi JavaScript hoặc tràn ngang toàn trang                           |
 | Quét 73 sinh viên                            | Đúng 55 submitted và 18 missing                                                |
 | Tải nhiều ZIP từ 55 bài đủ điều kiện         | **54 ZIP hoàn tất**, không tải tệp teacher hoặc bài missing                    |
@@ -30,7 +32,7 @@ Các lỗi phát hiện và sửa trong quá trình kiểm thử: liên kết đ
 
 ## Kịch bản E2E
 
-1. Dashboard trạng thái trống, không đưa dữ liệu mẫu vào chế độ thật; điều hướng Cài đặt, xác nhận xóa và hủy, module Python chưa triển khai.
+1. Website mở màn hình đăng nhập Google, không đưa dữ liệu lớp mẫu vào production; desktop/390px không tràn ngang toàn trang.
 2. Responsive ở desktop và 390px, không tràn ngang toàn trang; chụp ảnh hướng dẫn.
 3. Nạp tiện ích unpacked trong Chromium, kết nối tab Classroom mô phỏng, đọc lớp/bài tập và xác minh quyền giáo viên.
 4. Đọc đủ 73 sinh viên, phân loại đúng 55/18, không có cảnh báo lệch bộ đếm.
@@ -41,6 +43,11 @@ Các lỗi phát hiện và sửa trong quá trình kiểm thử: liên kết đ
 9. Đọc lại tệp CSV/XLSX đã xuất; quét lại cùng bài để kiểm tra tái sử dụng tab.
 10. Tab đã mở trước khi cài tiện ích không có content script: tự nạp kết nối, giữ nguyên trang và không nhân đôi thao tác tải khi nạp script nhiều lần.
 11. Chỉnh tên thư mục và thêm định dạng PDF, phát cập nhật trạng thái nền, xác nhận bản nháp được giữ và lưu được. Ca này chạy giao diện thật với cầu nối Chrome được mô phỏng.
+12. Website đăng nhập qua SDK mô phỏng, đọc lớp giáo viên/học viên và roster nhiều trang; tự tải bài nộp, giữ điểm 0, không gán chưa nộp cho người thiếu bản ghi; mở liên kết Drive và đọc lại CSV có BOM.
+13. Học viên chỉ gọi bài nộp có `userId=me`, không yêu cầu roster.
+14. Đăng xuất và Google 401 xóa dữ liệu cũ; kiểm tra token không nằm trong localStorage/sessionStorage.
+15. Lỗi quyền 403 không bị hiển thị thành danh sách bài nộp trống hợp lệ hoặc cho xuất báo cáo.
+16. Đổi lớp khi request cũ bị giữ lại: lớp mới vẫn hiển thị đúng, dữ liệu cũ đến muộn không ghi đè.
 
 ## Lỗi phát hiện trong lần rà soát 26/11
 
@@ -52,11 +59,15 @@ Các lỗi phát hiện và sửa trong quá trình kiểm thử: liên kết đ
 - **Gói phát hành cũ:** README và package là 1.0.1 nhưng thư mục release chỉ có ZIP 1.0.0. Lệnh package trước đây không build lại nên có thể đóng gói mã cũ. Đã thêm build vào lệnh package, kiểm tra phiên bản manifest và tự tạo SHA256SUMS cho các ZIP phát hành.
 - **Báo cáo kiểm thử lỗi thời:** số lượng 72/3 không phản ánh các ca kiểm thử kết nối đã được thêm. Báo cáo được cập nhật theo kết quả chạy lại.
 
-Đây là kiểm thử bản tiện ích hiện tại. `apps/web/api.ts` vẫn gửi lệnh qua Chrome runtime; website độc lập chưa có OAuth, backend hay kết nối Classroom/Drive API. Chưa thể dùng các kết quả này để xác nhận website kết nối dữ liệu thật.
+Từ 1.1.0, website dùng `GoogleSession` và `ClassroomClient`; `apps/web/api.ts` chỉ tiếp tục phục vụ phần tiện ích DOM tùy chọn. Kiểm thử mô phỏng không xác nhận website đã đăng nhập hoặc đọc dữ liệu Classroom thật.
 
 Ảnh đã tạo và kiểm tra: [desktop](dashboard-desktop.png), [mobile](dashboard-mobile.png), [kết quả trên dữ liệu mô phỏng](download-tested.png).
 
+Ảnh luồng API với dữ liệu mô phỏng: [web desktop](web-classroom-data.png), [web mobile](web-classroom-mobile.png).
+
 ## Chưa xác minh
+
+- OAuth Client ID thật, cấu hình origin/test users, chính sách Workspace và dữ liệu thật qua Classroom API.
 
 - DOM và thao tác Drive trên tài khoản Classroom production.
 - Chính sách tải nhiều tệp, kiểm tra bảo mật, CORS/referrer thực của từng hồ sơ Google.

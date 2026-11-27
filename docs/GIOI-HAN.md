@@ -1,5 +1,11 @@
 # Lỗi đã xử lý và giới hạn còn lại
 
+## Website API 1.1.0
+
+Website không dùng DOM Classroom. Cần bật Classroom API, OAuth Client ID loại Web application với đúng origin và cho phép tài khoản thử/ứng dụng theo chính sách Google. Code và thử nghiệm mô phỏng không thay thế kiểm chứng đăng nhập và dữ liệu thật sau khi có Client ID. Tài khoản học viên chỉ xem bài của mình. Token trong RAM, tải lại trang cần đăng nhập lại; phiên hết hạn cần thao tác đăng nhập mới. Chưa có đồng bộ nền, lưu lịch sử trên server, tải ZIP hàng loạt hoặc chấm Python. Chỉ hiển thị lớp ACTIVE và bài tập PUBLISHED mà API trả về. Không suy đoán trạng thái khi roster có người chưa có bản ghi bài nộp.
+
+Phần giới hạn DOM bên dưới áp dụng cho tiện ích Chrome/Edge tùy chọn.
+
 ## Đã có biện pháp xử lý trong mã và kiểm thử
 
 | Tình huống                                     | Cách xử lý                                                                   |

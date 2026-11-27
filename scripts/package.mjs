@@ -28,7 +28,8 @@ await zip(`Classroom-Manager-${version}.zip`, (a) => {
   a.directory('docs', 'Tai-lieu');
 });
 await zip(`Classroom-Manager-${version}-source.zip`, (a) => {
-  for (const d of ['apps', 'packages', 'scripts', 'tests', 'docs', '.github']) a.directory(d, d);
+  for (const d of ['apps', 'packages', 'scripts', 'tests', 'docs', '.github', 'public'])
+    a.directory(d, d);
   for (const f of [
     'package.json',
     'package-lock.json',
@@ -42,6 +43,7 @@ await zip(`Classroom-Manager-${version}-source.zip`, (a) => {
     '.gitignore',
     '.prettierrc.json',
     '.prettierignore',
+    '.env.example',
   ])
     a.file(f, { name: f });
 });

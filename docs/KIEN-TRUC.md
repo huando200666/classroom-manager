@@ -1,6 +1,14 @@
-# Kiến trúc MVP
+# Kiến trúc Classroom Manager
 
-## Luồng dữ liệu
+## Website Google OAuth/API từ 1.1.0
+
+`WebClassroomApp` dùng Google Identity Services để lấy access token qua popup do người dùng bấm. `ClassroomClient` gửi GET tới Google API bằng Authorization header, đọc đủ phân trang và hủy yêu cầu cũ khi đổi lớp hoặc đăng xuất. Vai trò lấy từ danh sách lớp `teacherId=me` và `studentId=me`. Học viên không yêu cầu roster và luôn dùng `userId=me` khi đọc bài nộp. Google API là nơi thực thi quyền truy cập; vai trò ở UI không cấp thêm quyền.
+
+Token và dữ liệu lớp chỉ ở bộ nhớ tab, không ghi Chrome Storage/localStorage/cookie, không có refresh token hoặc backend riêng. Phiên hết hạn/401 đưa UI về đăng nhập và xóa dữ liệu cũ. Callback/yêu cầu đến muộn không được áp dụng sau khi đổi phiên. Liên kết bài làm được kiểm tra giao thức HTTPS và render bằng React; không render HTML từ dữ liệu Google. CSV dùng bộ escaping hiện có.
+
+GitHub Pages build với `VITE_GOOGLE_CLIENT_ID` lấy từ repository variable `GOOGLE_CLIENT_ID`. Thiếu mã thì hiển thị cấu hình chờ, không giả đăng nhập. Quyền chỉ đọc, không ghi điểm hoặc sửa bài tập. Xem [cấu hình OAuth](GOOGLE-OAUTH.md) và [token model chính thức](https://developers.google.com/identity/oauth2/web/guides/use-token-model).
+
+## Luồng dữ liệu tiện ích DOM tùy chọn
 
 ```mermaid
 flowchart LR

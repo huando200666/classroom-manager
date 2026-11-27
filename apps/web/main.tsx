@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { WebClassroomApp } from './WebClassroomApp';
 import { version as appVersion } from '../../package.json';
 import { createRoot } from 'react-dom/client';
 import {
@@ -1281,4 +1282,4 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(installed ? <App /> : <WebClassroomApp />);

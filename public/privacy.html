@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Quyền riêng tư — Classroom Manager</title>
+    <style>
+      body {
+        font:
+          16px/1.8 'Segoe UI',
+          Arial,
+          sans-serif;
+        margin: 0;
+        background: #f5f7fb;
+        color: #263955;
+      }
+      main {
+        max-width: 760px;
+        margin: 40px auto;
+        background: white;
+        padding: 36px;
+        border: 1px solid #dfe7f3;
+        border-radius: 16px;
+      }
+      h1 {
+        line-height: 1.3;
+      }
+      h2 {
+        font-size: 21px;
+        margin-top: 30px;
+      }
+      a {
+        color: #2563eb;
+      }
+      @media (max-width: 700px) {
+        main {
+          margin: 16px;
+          padding: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./">Về Classroom Manager</a>
+      <h1>Quyền riêng tư</h1>
+      <p>
+        Cập nhật ngày 27/11/2026. Áp dụng cho giao diện web Classroom Manager tại
+        huando200666.github.io/classroom-manager.
+      </p>
+      <h2>Dữ liệu được đọc</h2>
+      <p>
+        Khi bạn đăng nhập và cấp quyền Google, website đọc thông tin tài khoản, lớp học, bài tập,
+        bài nộp và danh sách học viên trong phạm vi tài khoản được Google cho phép. Học viên được
+        yêu cầu bài nộp của chính mình; giáo viên có thể xem bài nộp của lớp họ dạy. Website không
+        tạo, sửa hoặc xóa lớp, bài tập hay điểm.
+      </p>
+      <h2>Lưu trữ và sử dụng</h2>
+      <p>
+        Access token và dữ liệu lớp được giữ trong bộ nhớ của tab. Ứng dụng không ghi chúng vào
+        localStorage, cookie hoặc cơ sở dữ liệu riêng, và không gửi dữ liệu lớp tới máy chủ riêng
+        của chủ website. Dữ liệu dùng để hiển thị và tạo báo cáo CSV khi bạn yêu cầu. Đăng xuất,
+        đóng hoặc tải lại tab sẽ xóa phiên trong bộ nhớ; tệp báo cáo đã tải vẫn ở thiết bị của bạn.
+      </p>
+      <h2>Dịch vụ Google và GitHub</h2>
+      <p>
+        Đăng nhập diễn ra trên Google; website không nhận mật khẩu Google. Trình duyệt kết nối trực
+        tiếp tới Google Identity Services và Google API. GitHub Pages phục vụ tệp website. Các dịch
+        vụ này có chính sách riêng và có thể lưu dữ liệu vận hành theo chính sách của họ. Ứng dụng
+        không tích hợp công cụ quảng cáo hoặc phân tích truy cập riêng.
+      </p>
+      <h2>Đăng xuất và thu hồi quyền</h2>
+      <p>
+        Đăng xuất xóa phiên website, không đăng xuất Google trên các trang khác. Bạn có thể thu hồi
+        quyền ứng dụng tại
+        <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer"
+          >trang kết nối tài khoản Google</a
+        >. Sau khi phiên hết hạn hoặc quyền bị thu hồi, cần đăng nhập lại để đọc dữ liệu.
+      </p>
+      <h2>Liên hệ</h2>
+      <p>
+        Liên hệ qua
+        <a href="https://github.com/huando200666/classroom-manager/issues"
+          >GitHub Issues của dự án</a
+        >. Không đăng mật khẩu, token hoặc thông tin cá nhân học viên lên issue công khai.
+        <a href="https://github.com/huando200666/classroom-manager">Xem mã nguồn</a>.
+      </p>
+    </main>
+  </body>
+</html>
